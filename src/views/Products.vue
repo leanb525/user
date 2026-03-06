@@ -253,7 +253,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/app'
 import { productAPI, categoryAPI } from '../api'
@@ -262,6 +262,7 @@ import { debounceAsync } from '../utils/debounce'
 import { amountToCents } from '../utils/money'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useI18n()
 const appStore = useAppStore()
 
@@ -405,6 +406,15 @@ const clearSearch = () => {
 watch(selectedCategory, () => {
   currentPage.value = 1
   debouncedLoadProducts()
+  // 同步 URL：分类切换时更新地址栏
+  if (selectedCategory.value) {
+    const matched = categories.value.find((c: any) => c.id === selectedCategory.value)
+    if (matched?.slug) {
+      router.replace({ name: 'category-products', params: { slug: matched.slug } })
+    }
+  } else if (route.name === 'category-products') {
+    router.replace({ name: 'products' })
+  }
 })
 
 watch(searchQuery, () => {
@@ -413,10 +423,18 @@ watch(searchQuery, () => {
 })
 
 onMounted(async () => {
-  await Promise.all([
-    debouncedLoadCategories(),
-    debouncedLoadProducts(),
-  ])
+  await debouncedLoadCategories()
+  // 如果是 /categories/:slug 路由，根据 slug 自动选中分类
+  const slugParam = route.params.slug as string | undefined
+  if (slugParam && categories.value.length > 0) {
+    const matched = categories.value.find((c: any) => c.slug === slugParam)
+    if (matched) {
+      selectedCategory.value = matched.id
+      // watch 会触发 loadProducts，无需手动调用
+      return
+    }
+  }
+  await debouncedLoadProducts()
 })
 
 onUnmounted(() => {

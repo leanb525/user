@@ -342,7 +342,9 @@ const skuAvailableStock = (sku: any) => {
     return Math.max(upstreamStock, 0)
   }
   if (product.value?.fulfillment_type === 'auto') {
-    return normalizeStockNumber(sku?.auto_stock_available)
+    const autoStock = Number(sku?.auto_stock_available ?? 0)
+    if (autoStock < 0) return null // 无限库存（上游映射商品）
+    return normalizeStockNumber(autoStock)
   }
   const total = normalizeManualStockTotal(sku?.manual_stock_total)
   if (total === -1) return null
