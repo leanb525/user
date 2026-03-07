@@ -2,15 +2,31 @@
   <div
     class="product-detail-page min-h-screen theme-page pt-24 pb-16">
     <div class="container mx-auto px-4">
-      <!-- Loading State -->
-      <div v-if="loading" class="animate-pulse space-y-8">
-        <div class="h-8 theme-surface-muted rounded w-1/3"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div class="h-[500px] theme-surface-muted rounded-2xl"></div>
-          <div class="space-y-6">
-            <div class="h-10 theme-surface-muted rounded w-3/4"></div>
-            <div class="h-6 theme-surface-muted rounded w-1/2"></div>
-            <div class="h-32 theme-surface-muted rounded"></div>
+      <!-- Loading Skeleton -->
+      <div v-if="loading" class="space-y-8">
+        <div class="h-5 w-48 rounded theme-skeleton"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 theme-panel border rounded-3xl overflow-hidden">
+          <div class="p-4 md:p-8 theme-surface-soft border-r theme-border">
+            <div class="h-[300px] md:h-[500px] rounded-xl theme-skeleton"></div>
+            <div class="mt-4 flex gap-3 overflow-hidden">
+              <div v-for="i in 4" :key="i" class="w-16 h-16 rounded-lg theme-skeleton shrink-0"></div>
+            </div>
+          </div>
+          <div class="p-6 md:p-12 space-y-6">
+            <div class="h-3 w-24 rounded theme-skeleton"></div>
+            <div class="h-10 w-3/4 rounded theme-skeleton"></div>
+            <div class="flex gap-2">
+              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
+              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
+              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
+            </div>
+            <div class="h-14 w-48 rounded theme-skeleton"></div>
+            <div class="h-4 w-full rounded theme-skeleton"></div>
+            <div class="h-4 w-2/3 rounded theme-skeleton"></div>
+            <div class="flex gap-4 mt-8">
+              <div class="h-14 flex-1 rounded-xl theme-skeleton"></div>
+              <div class="h-14 flex-1 rounded-xl theme-skeleton"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -34,12 +50,14 @@
           class="theme-panel backdrop-blur-xl border rounded-3xl overflow-hidden mb-8 shadow-2xl">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <!-- Product Images (Left) -->
-            <div class="p-8 theme-surface-soft border-r theme-border">
-              <div class="mb-6 relative group">
+            <div class="p-4 md:p-8 theme-surface-soft border-r theme-border">
+              <div class="mb-4 md:mb-6 relative group"
+                @touchstart="onImageTouchStart"
+                @touchend="onImageTouchEnd">
                 <img v-if="currentImage" :src="currentImage" :alt="getLocalizedText(product.title)"
-                  class="w-full h-[400px] lg:h-[500px] object-cover rounded-xl border theme-border relative z-10 shadow-lg" />
+                  class="w-full h-[300px] md:h-[400px] lg:h-[500px] object-cover rounded-xl border theme-border relative z-10 shadow-lg" />
                 <div v-else
-                  class="w-full h-[400px] lg:h-[500px] theme-surface-muted rounded-xl border theme-border flex items-center justify-center relative z-10">
+                  class="w-full h-[300px] md:h-[400px] lg:h-[500px] theme-surface-muted rounded-xl border theme-border flex items-center justify-center relative z-10">
                   <svg class="w-24 h-24 theme-text-muted" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
                       d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
@@ -48,10 +66,10 @@
                 </div>
               </div>
 
-              <!-- Thumbnail Gallery -->
-              <div v-if="images.length > 1" class="grid grid-cols-5 gap-3">
+              <!-- Thumbnail Gallery: horizontal scroll on mobile, grid on desktop -->
+              <div v-if="images.length > 1" class="flex md:grid md:grid-cols-5 gap-3 overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-1 px-1 snap-x snap-mandatory">
                 <div v-for="(image, index) in images" :key="index" @click="currentImage = image"
-                  class="cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-300 aspect-w-1 aspect-h-1"
+                  class="cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-300 shrink-0 w-16 h-16 md:w-auto md:h-auto md:aspect-square snap-start"
                   :class="currentImage === image ? 'theme-thumb-selected opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'">
                   <img :src="image" :alt="`Image ${index + 1}`" class="w-full h-full object-cover" />
                 </div>
@@ -59,7 +77,7 @@
             </div>
 
             <!-- Product Info (Right) -->
-            <div class="p-8 lg:p-12 flex flex-col justify-center">
+            <div class="p-6 md:p-8 lg:p-12 flex flex-col justify-center">
               <div class="mb-6">
                 <div v-if="categoryName" class="mb-3 text-xs uppercase tracking-wider theme-text-muted">
                   {{ t('productDetail.categoryLabel') }} · {{ categoryName }}
@@ -75,7 +93,7 @@
                   </span>
                 </div>
 
-                <h1 class="mb-4 text-3xl font-black leading-tight theme-text-primary md:text-5xl">
+                <h1 class="mb-4 text-2xl md:text-3xl lg:text-5xl font-black leading-tight theme-text-primary">
                   {{ getLocalizedText(product.title) }}
                 </h1>
 
@@ -121,7 +139,7 @@
                   </span>
                 </div>
 
-                <div class="mb-8 border-b theme-border pb-8">
+                <div class="mb-8 border-b theme-border pb-8" ref="priceSection">
                   <div class="mb-3 flex flex-wrap items-center gap-2">
                     <span class="text-sm theme-text-muted">{{ t('products.price') }}</span>
                     <span v-if="!selectedSku && hasPromotionPrice(product)" class="theme-badge theme-badge-danger">
@@ -129,17 +147,16 @@
                     </span>
                   </div>
                   <div v-if="selectedSku" class="flex items-end gap-4">
-                    <span
-                      class="text-5xl font-mono font-bold theme-text-accent">
+                    <span class="theme-price-lg theme-text-accent">
                       {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
                     </span>
                   </div>
                   <div v-else-if="hasPromotionPrice(product)" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
-                      <span class="text-5xl font-mono font-bold text-rose-600 dark:text-rose-300">
+                      <span class="theme-price-lg text-rose-600 dark:text-rose-300">
                         {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
                       </span>
-                      <span class="text-base font-medium theme-text-muted opacity-80 line-through">
+                      <span class="theme-price-original">
                         {{ formatPrice(product.price_amount, siteCurrency) }}
                       </span>
                     </div>
@@ -148,8 +165,7 @@
                     </p>
                   </div>
                   <div v-else class="flex items-end gap-4">
-                    <span
-                      class="text-5xl font-mono font-bold theme-text-accent">
+                    <span class="theme-price-lg theme-text-accent">
                       {{ formatPrice(product.price_amount, siteCurrency) }}
                     </span>
                   </div>
@@ -164,7 +180,7 @@
                       v-for="sku in activeSkus"
                       :key="sku.id"
                       type="button"
-                      class="flex flex-col items-start rounded-xl border px-3 py-2 text-sm transition-all"
+                      class="flex flex-col items-start rounded-xl border px-3 py-2 text-sm transition-all min-h-[44px]"
                       :class="[
                         normalizeSkuId(sku.id) === selectedSkuId ? 'theme-selected-surface ring-1 ring-primary/30' : 'theme-btn-secondary',
                         isSkuPurchasable(sku) ? 'hover:-translate-y-0.5' : 'cursor-not-allowed opacity-55 border-dashed',
@@ -196,8 +212,8 @@
                 </div>
               </div>
 
-              <!-- Purchase Actions -->
-              <div class="mt-auto space-y-6">
+              <!-- Purchase Actions (Desktop + original position) -->
+              <div ref="purchaseActionsRef" class="mt-auto space-y-6">
                 <p v-if="cannotPurchaseReason" class="rounded-xl border theme-alert-danger px-4 py-3 text-sm font-semibold">
                   {{ cannotPurchaseReason }}
                 </p>
@@ -207,16 +223,16 @@
 
                 <div class="space-y-3">
                   <button v-if="requiresLogin" @click="goLogin"
-                    class="w-full px-6 py-4 theme-btn-primary font-bold rounded-xl transition-colors">
+                    class="w-full px-6 py-4 theme-btn-primary font-bold rounded-xl transition-colors min-h-[48px]">
                     {{ t('productDetail.loginToBuy') }}
                   </button>
                   <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button @click="addToCart" :disabled="!canPurchase"
-                      class="px-6 py-4 border theme-btn-secondary font-bold rounded-xl disabled:cursor-not-allowed disabled:opacity-50">
+                      class="px-6 py-4 border theme-btn-secondary font-bold rounded-xl disabled:cursor-not-allowed disabled:opacity-50 min-h-[48px]">
                       {{ t('productDetail.addToCart') }}
                     </button>
                     <button @click="buyNow" :disabled="!canPurchase"
-                      class="px-6 py-4 theme-btn-primary font-bold rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50">
+                      class="px-6 py-4 theme-btn-primary font-bold rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50 min-h-[48px]">
                       {{ t('productDetail.buyNow') }}
                     </button>
                   </div>
@@ -229,7 +245,7 @@
 
         <!-- Details Content Card -->
         <div v-if="product.content"
-          class="theme-panel backdrop-blur-xl border rounded-3xl overflow-hidden mb-12 p-8 lg:p-12 relative">
+          class="theme-panel backdrop-blur-xl border rounded-3xl overflow-hidden mb-12 p-6 md:p-8 lg:p-12 relative">
           <h2
             class="text-2xl font-bold mb-8 theme-text-primary flex items-center gap-3 border-b theme-border pb-6">
             <span class="w-1.5 h-8 theme-accent-stick rounded-full"></span>
@@ -250,11 +266,53 @@
             <span>{{ t('productDetail.backToProducts') }}</span>
           </router-link>
         </div>
+
+        <!-- Mobile Fixed Purchase Bar -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="translate-y-full opacity-0"
+          enter-to-class="translate-y-0 opacity-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="translate-y-0 opacity-100"
+          leave-to-class="translate-y-full opacity-0">
+          <div v-if="showMobileBar && product && !loading"
+            class="lg:hidden fixed bottom-0 left-0 right-0 z-40 theme-panel-strong backdrop-blur-xl border-t theme-border shadow-2xl theme-safe-bottom">
+            <div class="flex items-center gap-3 px-4 py-3">
+              <!-- Price -->
+              <div class="flex-1 min-w-0">
+                <span v-if="selectedSku" class="theme-price-sm theme-text-accent truncate block">
+                  {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                </span>
+                <span v-else-if="hasPromotionPrice(product)" class="theme-price-sm text-rose-600 dark:text-rose-300 truncate block">
+                  {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
+                </span>
+                <span v-else class="theme-price-sm theme-text-accent truncate block">
+                  {{ formatPrice(product.price_amount, siteCurrency) }}
+                </span>
+              </div>
+              <!-- Actions -->
+              <button v-if="requiresLogin" @click="goLogin"
+                class="px-5 py-3 theme-btn-primary font-bold rounded-xl text-sm min-h-[44px]">
+                {{ t('productDetail.loginToBuy') }}
+              </button>
+              <template v-else>
+                <button @click="addToCart" :disabled="!canPurchase"
+                  class="px-4 py-3 border theme-btn-secondary font-bold rounded-xl text-sm disabled:opacity-50 min-h-[44px]">
+                  {{ t('productDetail.addToCart') }}
+                </button>
+                <button @click="buyNow" :disabled="!canPurchase"
+                  class="px-5 py-3 theme-btn-primary font-bold rounded-xl text-sm disabled:opacity-50 min-h-[44px]">
+                  {{ t('productDetail.buyNow') }}
+                </button>
+              </template>
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <!-- Error State -->
       <div v-else
-        class="text-center py-24 theme-panel rounded-3xl border backdrop-blur-sm">
+        class="text-center py-24 theme-panel rounded-3xl border backdrop-blur-sm theme-slide-up">
         <svg class="w-20 h-20 mx-auto theme-text-muted mb-6" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -273,7 +331,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/app'
@@ -284,8 +342,10 @@ import { useCartStore } from '../stores/cart'
 import { useUserAuthStore } from '../stores/userAuth'
 import { debounceAsync } from '../utils/debounce'
 import { useHead } from '@unhead/vue'
-import { amountToCents, centsToAmount } from '../utils/money'
+// centsToAmount used internally by composable
 import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
+import { useLocalized, useProductLabels } from '../composables/useProduct'
+import { toast } from '../composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -294,11 +354,38 @@ const appStore = useAppStore()
 const cartStore = useCartStore()
 const userAuthStore = useUserAuthStore()
 
+const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount } = useProductLabels()
+
 const loading = ref(true)
 const product = ref<any>(null)
 const currentImage = ref<string>('')
 const selectedSkuId = ref(0)
 const purchaseWarning = ref('')
+const purchaseActionsRef = ref<HTMLElement | null>(null)
+const showMobileBar = ref(false)
+let observer: IntersectionObserver | null = null
+
+// Image touch swipe
+let touchStartX = 0
+const onImageTouchStart = (e: TouchEvent) => {
+  touchStartX = e.touches[0]?.clientX ?? 0
+}
+const onImageTouchEnd = (e: TouchEvent) => {
+  const touchEndX = e.changedTouches[0]?.clientX ?? 0
+  const diff = touchStartX - touchEndX
+  if (Math.abs(diff) < 50) return
+  if (images.value.length <= 1) return
+  const currentIdx = images.value.indexOf(currentImage.value)
+  if (currentIdx === -1) return
+  if (diff > 0) {
+    // Swipe left -> next
+    currentImage.value = images.value[(currentIdx + 1) % images.value.length] ?? ''
+  } else {
+    // Swipe right -> prev
+    currentImage.value = images.value[(currentIdx - 1 + images.value.length) % images.value.length] ?? ''
+  }
+}
 
 const activeSkus = computed(() => {
   const rows = Array.isArray(product.value?.skus) ? product.value.skus : []
@@ -338,12 +425,12 @@ const skuAvailableStock = (sku: any) => {
   if (!shouldEnforceSkuStock(sku)) return null
   if (product.value?.fulfillment_type === 'upstream') {
     const upstreamStock = Number(sku?.upstream_stock ?? 0)
-    if (upstreamStock === -1) return null // 无限库存
+    if (upstreamStock === -1) return null
     return Math.max(upstreamStock, 0)
   }
   if (product.value?.fulfillment_type === 'auto') {
     const autoStock = Number(sku?.auto_stock_available ?? 0)
-    if (autoStock < 0) return null // 无限库存（上游映射商品）
+    if (autoStock < 0) return null
     return normalizeStockNumber(autoStock)
   }
   const total = normalizeManualStockTotal(sku?.manual_stock_total)
@@ -398,93 +485,14 @@ const categoryName = computed(() => {
 
 const images = computed(() => {
   if (!product.value?.images) return []
-  // 处理不同的数据格式
   let imageArray: string[] = []
   if (Array.isArray(product.value.images)) {
     imageArray = product.value.images
   } else if (product.value.images.images && Array.isArray(product.value.images.images)) {
     imageArray = product.value.images.images
   }
-  // 将所有图片路径转换为完整 URL
   return imageArray.map(img => getImageUrl(img))
 })
-
-const getLocalizedText = (jsonData: any) => {
-  if (!jsonData) return ''
-  const locale = appStore.locale
-  return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
-}
-
-const siteCurrency = computed(() => {
-  const raw = String(appStore.config?.currency || '').trim().toUpperCase()
-  return /^[A-Z]{3}$/.test(raw) ? raw : 'CNY'
-})
-
-const getPurchaseTypeLabel = (purchaseType: string) => {
-  return purchaseType === 'guest' ? t('productPurchase.guest') : t('productPurchase.member')
-}
-
-const getFulfillmentTypeLabel = (fulfillmentType: string) => {
-  return fulfillmentType === 'auto' ? t('products.fulfillmentType.auto') : t('products.fulfillmentType.manual')
-}
-
-const getStockBadgeClass = (status: string) => {
-  switch (status) {
-    case 'unlimited':
-      return 'theme-badge-info'
-    case 'low_stock':
-      return 'theme-badge-warning'
-    case 'out_of_stock':
-      return 'theme-badge-danger'
-    default:
-      return 'theme-badge-success'
-  }
-}
-
-const getStockStatusLabel = (payload: any) => {
-  const status = payload?.stock_status || ''
-  if (status === 'unlimited') return t('products.stockStatus.unlimited')
-  if (status === 'out_of_stock') return t('products.stockStatus.outOfStock')
-  if (status === 'low_stock') {
-    const count = Number(payload?.fulfillment_type === 'manual' ? payload?.manual_stock_available : payload?.auto_stock_available)
-    if (Number.isFinite(count) && count > 0) {
-      return t('products.stockStatus.lowStockCount', { count })
-    }
-    return t('products.stockStatus.lowStock')
-  }
-  return t('products.stockStatus.inStock')
-}
-
-const formatPrice = (amount: any, currency: any) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
-}
-
-const parsePriceAmount = (amount: any) => {
-  return amountToCents(amount)
-}
-
-const getPromotionPriceAmount = (payload: any) => payload?.promotion_price_amount
-
-const hasPromotionPrice = (payload: any) => {
-  if (!payload) return false
-  const original = parsePriceAmount(payload.price_amount)
-  const promotion = parsePriceAmount(payload.promotion_price_amount)
-  if (original === null || promotion === null) return false
-  return promotion >= 0 && promotion < original
-}
-
-const getPromotionSaveAmount = (payload: any) => {
-  const original = parsePriceAmount(payload?.price_amount)
-  const promotion = parsePriceAmount(payload?.promotion_price_amount)
-  if (original === null || promotion === null || promotion >= original) {
-    return '0.00'
-  }
-  return centsToAmount(original - promotion)
-}
 
 const skuDisplayText = (sku: any) => {
   return buildSkuDisplayText({
@@ -564,6 +572,7 @@ const addToCart = () => {
     manualFormSchema: product.value.manual_form_schema || {},
     quantity: 1,
   })
+  toast.success(t('toast.addedToCart'))
 }
 
 const buyNow = () => {
@@ -588,6 +597,9 @@ const loadProduct = async () => {
       currentImage.value = images.value[0] || ''
     }
     syncSelectedSku()
+    // Setup IntersectionObserver after product loads
+    await nextTick()
+    setupMobileBarObserver()
   } catch (error) {
     console.error('Failed to load product:', error)
     product.value = null
@@ -595,6 +607,21 @@ const loadProduct = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const setupMobileBarObserver = () => {
+  if (observer) observer.disconnect()
+  if (!purchaseActionsRef.value) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0]
+      if (entry) {
+        showMobileBar.value = !entry.isIntersecting
+      }
+    },
+    { threshold: 0.1 }
+  )
+  observer.observe(purchaseActionsRef.value)
 }
 
 const debouncedLoadProduct = debounceAsync(loadProduct, 300)
@@ -608,11 +635,9 @@ useHead({
     const seoDescription = getLocalizedText(seoMeta.description) || (typeof seoMeta.description === 'string' ? seoMeta.description : '')
     const tags = []
 
-    // Standard SEO Tags
     if (seoKeywords) tags.push({ name: 'keywords', content: seoKeywords })
     if (seoDescription) tags.push({ name: 'description', content: seoDescription })
 
-    // Open Graph Tags
     tags.push({ property: 'og:type', content: 'website' })
     if (product.value.title) {
       tags.push({ property: 'og:title', content: getLocalizedText(product.value.title) })
@@ -625,7 +650,6 @@ useHead({
     }
     tags.push({ property: 'og:url', content: window.location.href })
 
-    // Twitter Card Tags
     tags.push({ name: 'twitter:card', content: 'summary_large_image' })
     if (product.value.title) {
       tags.push({ name: 'twitter:title', content: getLocalizedText(product.value.title) })
@@ -654,5 +678,9 @@ watch(
 
 onUnmounted(() => {
   debouncedLoadProduct.cancel()
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
 })
 </script>

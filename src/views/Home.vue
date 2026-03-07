@@ -2,8 +2,13 @@
   <div class="home-page min-h-screen theme-page">
     <section class="relative z-10 border-b theme-border pt-24 pb-10">
       <div class="container mx-auto px-4">
-        <div class="relative overflow-hidden rounded-2xl border theme-panel">
-          <img v-if="!bannerLoading && heroImage" :src="heroImage" class="absolute inset-0 h-full w-full object-cover" />
+        <div class="relative overflow-hidden rounded-2xl border theme-panel"
+          @touchstart="onBannerTouchStart"
+          @touchend="onBannerTouchEnd">
+          <!-- Banner image with fade transition -->
+          <Transition name="banner-fade" mode="out-in">
+            <img v-if="!bannerLoading && heroImage" :src="heroImage" :key="heroImage" class="absolute inset-0 h-full w-full object-cover" />
+          </Transition>
           <div class="absolute inset-0 bg-black/50"></div>
 
             <div v-if="bannerLoading" class="relative flex min-h-[420px] flex-col justify-between p-8 md:p-12">
@@ -14,14 +19,14 @@
             </div>
 
             <div class="space-y-4">
-              <div class="h-6 w-28 animate-pulse rounded-full bg-white/35"></div>
-              <div class="h-10 max-w-4xl animate-pulse rounded-xl bg-white/35 md:h-14"></div>
-              <div class="h-5 max-w-3xl animate-pulse rounded-lg bg-white/30"></div>
+              <div class="h-6 w-28 theme-skeleton rounded-full" style="background: rgba(255,255,255,0.35)"></div>
+              <div class="h-10 max-w-4xl theme-skeleton rounded-xl md:h-14" style="background: rgba(255,255,255,0.35)"></div>
+              <div class="h-5 max-w-3xl theme-skeleton rounded-lg" style="background: rgba(255,255,255,0.3)"></div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3 pt-6">
-              <div class="h-11 w-36 animate-pulse rounded-lg bg-white/35"></div>
-              <div class="h-11 w-28 animate-pulse rounded-lg bg-white/25"></div>
+              <div class="h-11 w-36 theme-skeleton rounded-lg" style="background: rgba(255,255,255,0.35)"></div>
+              <div class="h-11 w-28 theme-skeleton rounded-lg" style="background: rgba(255,255,255,0.25)"></div>
             </div>
           </div>
 
@@ -29,7 +34,7 @@
             <div v-if="bannerCount > 1" class="mb-4 flex items-center justify-end gap-2">
               <button
                 type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white transition hover:bg-black/35"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white transition hover:bg-black/35"
                 @click="handlePrevHeroBanner"
                 :aria-label="t('common.previousBanner')"
               >
@@ -39,7 +44,7 @@
               </button>
               <button
                 type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white transition hover:bg-black/35"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white transition hover:bg-black/35"
                 @click="handleNextHeroBanner"
                 :aria-label="t('common.nextBanner')"
               >
@@ -66,7 +71,7 @@
               <button
                 type="button"
                 @click="goToHeroLink"
-                class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition hover:scale-105"
+                class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition hover:scale-105 min-h-[44px]"
               >
                 {{ heroPrimaryButtonText }}
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +81,7 @@
               <router-link
                 v-if="!hasHeroLink"
                 to="/products"
-                class="inline-flex items-center rounded-lg border border-white/30 px-5 py-3 text-sm font-medium text-white transition hover:border-white hover:bg-white/10"
+                class="inline-flex items-center rounded-lg border border-white/30 px-5 py-3 text-sm font-medium text-white transition hover:border-white hover:bg-white/10 min-h-[44px]"
               >
                 {{ t('home.featured.viewAll') }}
               </router-link>
@@ -114,17 +119,18 @@
           </router-link>
         </div>
 
-        <div v-if="products.length > 0" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div v-if="products.length > 0" class="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
           <article
-            v-for="product in products"
+            v-for="(product, idx) in products"
             :key="product.id"
-            class="group cursor-pointer overflow-hidden rounded-2xl border theme-panel shadow-sm transition flex h-full flex-col"
+            class="group cursor-pointer overflow-hidden rounded-2xl border theme-panel shadow-sm transition flex h-full flex-col theme-slide-up"
+            :style="{ animationDelay: `${idx * 60}ms` }"
             :class="isSoldOut(product)
               ? 'opacity-85 grayscale-[0.25] saturate-50 border-rose-300/60 dark:border-rose-900/40 hover:-translate-y-0 hover:shadow-sm'
               : 'hover:-translate-y-1 hover:shadow-lg'"
             @click="goToProduct(product.slug)"
           >
-            <div class="relative h-56 overflow-hidden theme-surface-muted shrink-0">
+            <div class="relative h-36 md:h-56 overflow-hidden theme-surface-muted shrink-0">
               <img
                 v-if="product.images && getFirstImageUrl(product.images)"
                 :src="getFirstImageUrl(product.images)"
@@ -152,63 +158,40 @@
                 </span>
               </div>
             </div>
-            <div class="space-y-2 p-5">
-              <h3 class="line-clamp-1 text-base font-semibold theme-text-primary">{{ getLocalizedText(product.title) }}</h3>
+            <div class="space-y-2 p-3 md:p-5">
+              <h3 class="line-clamp-1 text-sm md:text-base font-semibold theme-text-primary">{{ getLocalizedText(product.title) }}</h3>
 
-              <div class="flex flex-wrap items-center gap-2">
+              <!-- Simplified badges for home: only show stock status (non-in-stock) and fulfillment type -->
+              <div class="flex flex-wrap items-center gap-1.5">
                 <span
-                  class="theme-badge"
-                  :class="product.purchase_type === 'guest'
-                    ? 'theme-badge-warning'
-                    : 'theme-badge-success'"
-                >
-                  <svg v-if="product.purchase_type === 'guest'" class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" />
-                    <circle cx="9.5" cy="7" r="3" stroke-width="2" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8l2 2-2 2" />
-                  </svg>
-                  <svg v-else class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="11" width="18" height="10" rx="2" ry="2" stroke-width="2" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V8a5 5 0 0110 0v3" />
-                  </svg>
-                  {{ getPurchaseTypeLabel(product.purchase_type) }}
-                </span>
-
-                <span
-                  class="theme-badge"
-                  :class="product.fulfillment_type === 'auto'
-                    ? 'theme-badge-info'
-                    : 'theme-badge-neutral'"
-                >
-                  <svg v-if="product.fulfillment_type === 'auto'" class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
-                  </svg>
-                  <svg v-else class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3l3 3m-9.4 9.4l-4 1 1-4 9.9-9.9a2.1 2.1 0 013 3L8.3 18.7z" />
-                  </svg>
-                  {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
-                </span>
-
-                <span
-                  class="theme-badge"
+                  v-if="product.stock_status && product.stock_status !== 'in_stock'"
+                  class="theme-badge theme-badge-xs"
                   :class="getStockBadgeClass(product.stock_status)"
                 >
                   {{ getStockStatusLabel(product) }}
                 </span>
+
+                <span
+                  class="theme-badge theme-badge-xs"
+                  :class="product.fulfillment_type === 'auto'
+                    ? 'theme-badge-info'
+                    : 'theme-badge-neutral'"
+                >
+                  {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+                </span>
               </div>
 
-              <p class="line-clamp-2 text-sm theme-text-secondary">{{ getLocalizedText(product.description) }}</p>
+              <p class="line-clamp-2 text-xs md:text-sm theme-text-secondary hidden md:block">{{ getLocalizedText(product.description) }}</p>
               <div class="pt-1">
                 <div class="flex flex-col">
-                  <span class="text-xs theme-text-muted uppercase tracking-wider">{{ t('products.price') }}</span>
-                  <span v-if="hasPromotionPrice(product)" class="text-lg font-bold text-rose-600 dark:text-rose-300 font-mono">
-                    {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
+                  <span v-if="hasPromotionPrice(product)" class="theme-price-sm theme-price-promotion">
+                    {{ siteCurrency }} {{ getPromotionPriceAmount(product) }}
                   </span>
-                  <span v-else class="text-lg font-bold theme-text-primary font-mono">
-                    {{ formatPrice(product.price_amount, siteCurrency) }}
+                  <span v-else class="theme-price-sm">
+                    {{ siteCurrency }} {{ product.price_amount }}
                   </span>
                   <div v-if="hasPromotionPrice(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    <span class="text-xs theme-text-muted opacity-80 line-through">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+                    <span class="text-xs theme-price-original">{{ siteCurrency }} {{ product.price_amount }}</span>
                     <span class="theme-badge theme-badge-danger theme-badge-xs">
                       {{ t('products.promotionTag') }}
                     </span>
@@ -218,13 +201,18 @@
             </div>
           </article>
         </div>
-        <div v-else class="rounded-2xl border border-dashed theme-border py-16 text-center theme-text-muted">
+        <div v-else class="rounded-2xl border border-dashed theme-border py-16 text-center theme-text-muted theme-slide-up">
+          <svg class="mx-auto h-16 w-16 mb-4 theme-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
           {{ t('home.featured.empty') }}
         </div>
       </div>
     </section>
 
-    <section class="relative z-10 border-t theme-border py-12">
+    <hr class="theme-section-divider mx-4 md:mx-auto md:max-w-6xl" />
+
+    <section class="relative z-10 py-12">
       <div class="container mx-auto px-4">
         <div class="mb-6 flex items-end justify-between gap-4">
           <div>
@@ -262,15 +250,15 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '../stores/app'
 import { bannerAPI, postAPI, productAPI } from '../api'
 import { getFirstImageUrl, getImageUrl } from '../utils/image'
 import { debounceAsync } from '../utils/debounce'
-import { amountToCents } from '../utils/money'
+import { useLocalized, useProductLabels } from '../composables/useProduct'
 
 const router = useRouter()
 const { t } = useI18n()
-const appStore = useAppStore()
+const { getLocalizedText, siteCurrency } = useLocalized()
+const { getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
 
 const products = ref<any[]>([])
 const posts = ref<any[]>([])
@@ -280,53 +268,18 @@ const bannerLoading = ref(true)
 const currentBannerIndex = ref(0)
 let heroAutoPlayTimer: ReturnType<typeof setInterval> | null = null
 
-const getLocalizedText = (jsonData: any) => {
-  if (!jsonData) return ''
-  const locale = appStore.locale
-  return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
+// Touch swipe for banner
+let touchStartX = 0
+const onBannerTouchStart = (e: TouchEvent) => {
+  touchStartX = e.touches[0]?.clientX ?? 0
 }
-
-const siteCurrency = computed(() => {
-  const raw = String(appStore.config?.currency || '').trim().toUpperCase()
-  return /^[A-Z]{3}$/.test(raw) ? raw : 'CNY'
-})
-
-const getPurchaseTypeLabel = (purchaseType: string) => {
-  return purchaseType === 'guest' ? t('productPurchase.guest') : t('productPurchase.member')
-}
-
-const getFulfillmentTypeLabel = (fulfillmentType: string) => {
-  return fulfillmentType === 'auto' ? t('products.fulfillmentType.auto') : t('products.fulfillmentType.manual')
-}
-
-const getStockBadgeClass = (status: string) => {
-  switch (status) {
-    case 'unlimited':
-      return 'theme-badge-info'
-    case 'low_stock':
-      return 'theme-badge-warning'
-    case 'out_of_stock':
-      return 'theme-badge-danger'
-    default:
-      return 'theme-badge-success'
+const onBannerTouchEnd = (e: TouchEvent) => {
+  const diff = touchStartX - (e.changedTouches[0]?.clientX ?? 0)
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) handleNextHeroBanner()
+    else handlePrevHeroBanner()
   }
 }
-
-const getStockStatusLabel = (product: any) => {
-  const status = product?.stock_status || ''
-  if (status === 'unlimited') return t('products.stockStatus.unlimited')
-  if (status === 'out_of_stock') return t('products.stockStatus.outOfStock')
-  if (status === 'low_stock') {
-    const count = Number(product?.fulfillment_type === 'manual' ? product?.manual_stock_available : product?.auto_stock_available)
-    if (Number.isFinite(count) && count > 0) {
-      return t('products.stockStatus.lowStockCount', { count })
-    }
-    return t('products.stockStatus.lowStock')
-  }
-  return t('products.stockStatus.inStock')
-}
-
-const isSoldOut = (product: any) => Boolean(product?.is_sold_out || product?.stock_status === 'out_of_stock')
 
 const bannerCount = computed(() => banners.value.length)
 
@@ -335,8 +288,6 @@ const heroBanner = computed(() => {
   if (currentBannerIndex.value >= banners.value.length) return banners.value[0]
   return banners.value[currentBannerIndex.value]
 })
-
-
 
 const goToBanner = (index: number) => {
   if (banners.value.length === 0) return
@@ -439,28 +390,6 @@ const goToHeroLink = () => {
   router.push(heroLink.value)
 }
 
-const formatPrice = (amount: any, currency: any) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
-}
-
-const parsePriceAmount = (amount: any) => {
-  return amountToCents(amount)
-}
-
-const getPromotionPriceAmount = (product: any) => product?.promotion_price_amount
-
-const hasPromotionPrice = (product: any) => {
-  if (!product) return false
-  const original = parsePriceAmount(product.price_amount)
-  const promotion = parsePriceAmount(product.promotion_price_amount)
-  if (original === null || promotion === null) return false
-  return promotion >= 0 && promotion < original
-}
-
 const formatDate = (dateString: string) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString()
@@ -524,3 +453,14 @@ onUnmounted(() => {
   stopHeroAutoPlay()
 })
 </script>
+
+<style scoped>
+.banner-fade-enter-active,
+.banner-fade-leave-active {
+  transition: opacity 300ms ease;
+}
+.banner-fade-enter-from,
+.banner-fade-leave-to {
+  opacity: 0;
+}
+</style>

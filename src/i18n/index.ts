@@ -17,6 +17,7 @@ const messages = {
             previousBanner: '上一张',
             nextBanner: '下一张',
             switchBanner: '切换到第 {n} 张',
+            backToTop: '回到顶部',
             api: {
                 responseMissing: '服务器响应异常',
                 requestFailed: '请求失败',
@@ -108,6 +109,8 @@ const messages = {
                 manual: '人工交付',
                 auto: '自动交付',
             },
+            filter: '筛选',
+            closeFilter: '关闭筛选',
         },
         blog: {
             subtitle: '最新文章和动态',
@@ -142,6 +145,15 @@ const messages = {
             guestOrders: '游客查单',
             logout: '退出',
             selectLanguage: '选择语言',
+        },
+        toast: {
+            addedToCart: '已加入购物车',
+        },
+        bottomNav: {
+            home: '首页',
+            products: '商品',
+            cart: '购物车',
+            me: '我的',
         },
         personalCenter: {
             title: '个人中心',
@@ -846,6 +858,7 @@ const messages = {
             previousBanner: '上一張',
             nextBanner: '下一張',
             switchBanner: '切換到第 {n} 張',
+            backToTop: '回到頂部',
             api: {
                 responseMissing: '伺服器回應異常',
                 requestFailed: '請求失敗',
@@ -937,6 +950,8 @@ const messages = {
                 manual: '人工交付',
                 auto: '自動交付',
             },
+            filter: '篩選',
+            closeFilter: '關閉篩選',
         },
         productDetail: {
             description: '商品描述',
@@ -995,6 +1010,15 @@ const messages = {
             guestOrders: '遊客查單',
             logout: '退出',
             selectLanguage: '選擇語言',
+        },
+        toast: {
+            addedToCart: '已加入購物車',
+        },
+        bottomNav: {
+            home: '首頁',
+            products: '商品',
+            cart: '購物車',
+            me: '我的',
         },
         personalCenter: {
             title: '個人中心',
@@ -1675,6 +1699,7 @@ const messages = {
             previousBanner: 'Previous',
             nextBanner: 'Next',
             switchBanner: 'Switch to slide {n}',
+            backToTop: 'Back to Top',
             api: {
                 responseMissing: 'Server response is invalid',
                 requestFailed: 'Request failed',
@@ -1766,6 +1791,8 @@ const messages = {
                 manual: 'Manual delivery',
                 auto: 'Auto fulfillment',
             },
+            filter: 'Filter',
+            closeFilter: 'Close filter',
         },
         productDetail: {
             description: 'Description',
@@ -1824,6 +1851,15 @@ const messages = {
             guestOrders: 'Guest Lookup',
             logout: 'Logout',
             selectLanguage: 'Select Language',
+        },
+        toast: {
+            addedToCart: 'Added to cart',
+        },
+        bottomNav: {
+            home: 'Home',
+            products: 'Products',
+            cart: 'Cart',
+            me: 'Me',
         },
         personalCenter: {
             title: 'Personal Center',

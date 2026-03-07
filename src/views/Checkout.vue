@@ -6,24 +6,32 @@
         <p class="text-sm theme-text-secondary">{{ t('checkout.subtitle') }}</p>
       </div>
 
-      <div class="mb-8 rounded-2xl border border-gray-200 theme-panel-soft p-4 backdrop-blur">
-        <div class="grid grid-cols-3 gap-3">
-          <div
-            v-for="step in flowSteps"
-            :key="step.key"
-            class="theme-step-chip"
-            :class="step.active
-              ? 'theme-step-chip-active'
-              : 'theme-step-chip-inactive'"
-          >
-            {{ step.label }}
-          </div>
+      <div class="mb-8 rounded-2xl border theme-border theme-panel-soft p-4 backdrop-blur">
+        <div class="flex items-center">
+          <template v-for="(step, idx) in flowSteps" :key="step.key">
+            <div class="flex items-center gap-2" :class="idx === 0 ? '' : 'flex-1'">
+              <div v-if="idx > 0" class="flex-1 h-0.5 rounded-full transition-colors"
+                :class="step.active ? 'bg-current theme-text-accent' : 'theme-surface-muted'"></div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors"
+                  :class="step.active
+                    ? 'theme-btn-primary border-transparent'
+                    : 'border-gray-300 dark:border-gray-600 theme-text-muted'">
+                  {{ idx + 1 }}
+                </span>
+                <span class="text-sm font-medium hidden sm:inline"
+                  :class="step.active ? 'theme-text-primary' : 'theme-text-muted'">
+                  {{ step.label }}
+                </span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
       <div
         v-if="cartItems.length === 0"
-        class="rounded-2xl border border-gray-200 bg-white p-12 text-center dark:border-white/10"
+        class="rounded-2xl border theme-panel p-12 text-center"
       >
         <p class="mb-6 theme-text-muted">{{ t('checkout.empty') }}</p>
         <router-link
@@ -36,7 +44,7 @@
 
       <div v-else class="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
-          <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10">
+          <div class="rounded-2xl border theme-panel p-6">
             <h2 class="mb-4 text-lg font-bold theme-text-primary">{{ t('checkout.itemsTitle') }}</h2>
             <div class="space-y-4">
               <div
@@ -58,7 +66,7 @@
                         decoding="async"
                         class="h-full w-full object-cover"
                       />
-                      <div v-else class="flex h-full w-full items-center justify-center text-gray-400 dark:text-gray-500">
+                      <div v-else class="flex h-full w-full items-center justify-center theme-text-muted">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             stroke-linecap="round"
@@ -76,14 +84,14 @@
                       >
                         {{ getLocalizedText(item.title) }}
                       </router-link>
-                      <div class="mt-1 text-xs text-gray-500">{{ t('checkout.quantityLabel') }}：{{ item.quantity }}</div>
-                      <div v-if="itemSkuDisplay(item)" class="mt-1 text-xs text-gray-500">{{ t('checkout.skuLabel') }}：{{ itemSkuDisplay(item) }}</div>
+                      <div class="mt-1 text-xs theme-text-muted">{{ t('checkout.quantityLabel') }}：{{ item.quantity }}</div>
+                      <div v-if="itemSkuDisplay(item)" class="mt-1 text-xs theme-text-muted">{{ t('checkout.skuLabel') }}：{{ itemSkuDisplay(item) }}</div>
                       <div
                         v-if="itemStockHint(item)"
                         class="mt-1 text-xs"
                         :class="itemStockExceeded(item)
                           ? 'text-amber-600 dark:text-amber-300'
-                          : 'text-gray-500'"
+                          : 'theme-text-muted'"
                       >
                         {{ itemStockHint(item) }}
                       </div>
@@ -108,7 +116,7 @@
                     </div>
                   </div>
                   <div class="text-right">
-                    <div class="text-xs uppercase tracking-wider text-gray-500">{{ t('checkout.previewTotal') }}</div>
+                    <div class="text-xs uppercase tracking-wider theme-text-muted">{{ t('checkout.previewTotal') }}</div>
                     <div class="text-sm font-semibold theme-text-primary">{{ itemSubtotal(item) }}</div>
                   </div>
                 </div>
@@ -118,7 +126,7 @@
 
           <div
             v-if="manualFormProducts.length"
-            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10"
+            class="rounded-2xl border theme-panel p-6"
           >
             <h2 class="mb-2 text-lg font-bold theme-text-primary">{{ t('checkout.manualFormTitle') }}</h2>
             <p class="mb-4 text-xs theme-text-muted">{{ t('checkout.manualFormTip') }}</p>
@@ -126,12 +134,12 @@
               <div
                 v-for="manualItem in manualFormProducts"
                 :key="manualItem.itemKey"
-                class="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-black/20"
+                class="rounded-xl border theme-surface-soft p-4"
               >
                 <h3 class="mb-3 text-sm font-semibold theme-text-primary">{{ manualItemTitle(manualItem) }}</h3>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div v-for="field in manualItem.fields" :key="`${manualItem.itemKey}-${field.key}`" class="space-y-1.5">
-                    <label class="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    <label class="text-xs font-semibold theme-text-secondary">
                       {{ getManualFieldLabel(field) }}
                       <span v-if="field.required" class="ml-1 text-red-500">*</span>
                     </label>
@@ -153,8 +161,8 @@
                       <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
                     </select>
 
-                    <div v-else-if="field.type === 'radio'" class="space-y-2 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-black/40">
-                      <label v-for="option in field.options" :key="option" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <div v-else-if="field.type === 'radio'" class="space-y-2 rounded-xl border theme-surface-soft p-3">
+                      <label v-for="option in field.options" :key="option" class="flex items-center gap-2 text-sm theme-text-secondary">
                         <input
                           v-model="ensureManualFormRow(manualItem.itemKey)[field.key]"
                           type="radio"
@@ -166,8 +174,8 @@
                       </label>
                     </div>
 
-                    <div v-else-if="field.type === 'checkbox'" class="space-y-2 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-black/40">
-                      <label v-for="option in field.options" :key="option" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <div v-else-if="field.type === 'checkbox'" class="space-y-2 rounded-xl border theme-surface-soft p-3">
+                      <label v-for="option in field.options" :key="option" class="flex items-center gap-2 text-sm theme-text-secondary">
                         <input
                           v-model="ensureManualFormRow(manualItem.itemKey)[field.key]"
                           type="checkbox"
@@ -198,7 +206,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10">
+          <div class="rounded-2xl border theme-panel p-6">
             <h2 class="mb-4 text-lg font-bold theme-text-primary">{{ t('checkout.couponTitle') }}</h2>
             <input
               v-model="couponCode"
@@ -210,7 +218,7 @@
 
           <div
             v-if="!userAuthStore.isAuthenticated"
-            class="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10"
+            class="space-y-4 rounded-2xl border theme-panel p-6"
           >
             <h2 class="text-lg font-bold theme-text-primary">{{ t('checkout.modeTitle') }}</h2>
             <div class="flex flex-wrap gap-3">
@@ -263,7 +271,7 @@
               />
             </div>
 
-            <p v-if="checkoutMode === 'guest'" class="text-xs text-gray-500">
+            <p v-if="checkoutMode === 'guest'" class="text-xs theme-text-muted">
               {{ t('checkout.guestTip') }}
             </p>
             <p v-if="checkoutMode === 'guest' && guestEmail && !guestEmailValid" class="text-xs text-red-500">
@@ -272,9 +280,9 @@
           </div>
         </div>
 
-        <div class="h-fit rounded-2xl border border-gray-200 bg-white p-6 lg:sticky lg:top-24 dark:border-white/10">
+        <div class="h-fit rounded-2xl border theme-panel p-6 lg:sticky lg:top-24">
           <h2 class="mb-4 text-lg font-bold theme-text-primary">{{ t('checkout.submitTitle') }}</h2>
-          <div class="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs text-gray-500 dark:border-white/10 dark:bg-black/20 dark:text-gray-400">
+          <div class="mb-4 rounded-lg border theme-surface-soft p-3 text-xs theme-text-muted">
             {{ t('checkout.submitHint') }}
           </div>
 
@@ -295,7 +303,7 @@
               <span>{{ t('checkout.previewPromotion') }}</span>
               <span class="font-mono theme-text-primary">{{ formatPrice(previewPromotion, previewCurrency) }}</span>
             </div>
-            <div class="flex items-center justify-between border-t border-gray-100 pt-3 text-gray-900 dark:border-white/10 dark:text-white">
+            <div class="flex items-center justify-between border-t theme-border pt-3 theme-text-primary">
               <span class="font-semibold">{{ t('checkout.previewTotal') }}</span>
               <span class="font-mono text-lg font-bold">{{ formatPrice(previewTotal, previewCurrency) }}</span>
             </div>
@@ -342,12 +350,15 @@ import { getImageUrl } from '../utils/image'
 import { getAffiliateCode, getAffiliateVisitorKey } from '../utils/affiliate'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
+import { useLocalized } from '../composables/useProduct'
 
 const router = useRouter()
 const cartStore = useCartStore()
 const appStore = useAppStore()
 const userAuthStore = useUserAuthStore()
 const { t } = useI18n()
+
+const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
 
 const cartItems = computed(() => cartStore.items)
 const totalItems = computed(() => cartStore.totalItems)
@@ -372,17 +383,7 @@ const totalAmount = computed(() => {
   return centsToAmount(totalCents)
 })
 
-const siteCurrency = computed(() => {
-  const raw = String(appStore.config?.currency || '').trim().toUpperCase()
-  return /^[A-Z]{3}$/.test(raw) ? raw : ''
-})
-
-const totalCurrency = computed(() => {
-  if (siteCurrency.value) {
-    return siteCurrency.value
-  }
-  return 'CNY'
-})
+const totalCurrency = computed(() => siteCurrency.value || 'CNY')
 
 const previewCurrency = computed(() => preview.value?.currency || totalCurrency.value)
 const previewOriginal = computed(() => preview.value?.original_amount ?? totalAmount.value)
@@ -976,12 +977,6 @@ onUnmounted(() => {
   debouncedLoadPreview.cancel()
 })
 
-const getLocalizedText = (jsonData: any) => {
-  if (!jsonData) return ''
-  const locale = appStore.locale
-  return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
-}
-
 const cartItemKey = (item: CartItem) => `${item.productId}:${normalizeSkuId(item.skuId)}`
 
 const itemSkuDisplay = (item: CartItem) => buildSkuDisplayText({
@@ -1001,14 +996,6 @@ const manualItemTitle = (manualItem: ManualFormProduct) => {
   const productTitle = getLocalizedText(manualItem.title)
   if (manualItem.skuCount <= 1) return productTitle
   return `${productTitle} (${t('checkout.manualFormAppliesToSkuCount', { count: manualItem.skuCount })})`
-}
-
-const formatPrice = (amount: any, currency: any) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
 }
 
 const itemSubtotal = (item: CartItem) => {

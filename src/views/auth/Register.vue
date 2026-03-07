@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex min-h-screen items-center justify-center theme-page px-4 py-16 sm:px-6">
+  <div class="relative flex min-h-screen items-center justify-center theme-page theme-auth-page px-4 py-16 sm:px-6">
     <div class="relative z-10 w-full max-w-lg">
       <div class="mb-4 flex items-center justify-between px-1">
         <router-link

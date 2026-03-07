@@ -1,21 +1,111 @@
 <template>
-  <div
-    class="products-page min-h-screen theme-page pt-20 pb-16">
+  <div class="products-page min-h-screen theme-page pt-20 pb-16">
     <div class="container mx-auto px-4">
       <!-- Page Header -->
       <div class="mb-12 mt-12 text-center">
         <h1 class="text-4xl md:text-5xl font-black mb-4 tracking-tight theme-text-primary">{{ t('nav.products') }}</h1>
-        <p
-          class="theme-text-secondary max-w-2xl mx-auto text-lg border-b theme-border pb-8">
+        <p class="theme-text-secondary max-w-2xl mx-auto text-lg border-b theme-border pb-8">
           {{ t('products.subtitle') }}
         </p>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-8">
-        <!-- Sidebar - Categories -->
-        <aside class="lg:w-64 flex-shrink-0">
-          <div
-            class="theme-panel backdrop-blur-xl border rounded-2xl p-6 sticky top-24">
+        <!-- Mobile Filter Button -->
+        <button @click="showFilterDrawer = true"
+          class="lg:hidden flex items-center justify-center gap-2 px-4 py-3 rounded-xl border theme-btn-secondary text-sm font-medium min-h-[44px]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {{ t('products.filter') }}
+          <span v-if="selectedCategory" class="w-2 h-2 rounded-full theme-accent-stick"></span>
+        </button>
+
+        <!-- Mobile Filter Drawer Overlay -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0">
+          <div v-if="showFilterDrawer" class="lg:hidden fixed inset-0 z-40 bg-black/50" @click="showFilterDrawer = false"
+            style="overscroll-behavior: none;"></div>
+        </Transition>
+
+        <!-- Mobile Filter Drawer -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="-translate-x-full"
+          enter-to-class="translate-x-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="translate-x-0"
+          leave-to-class="-translate-x-full">
+          <div v-if="showFilterDrawer"
+            class="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 max-w-[80vw] theme-panel-strong backdrop-blur-xl border-r theme-border overflow-y-auto"
+            style="overscroll-behavior: none;">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-6">
+                <span class="text-sm font-bold theme-text-primary flex items-center gap-2">
+                  <span class="w-1 h-5 theme-accent-stick rounded-full"></span>
+                  {{ t('products.filter') }}
+                </span>
+                <button @click="showFilterDrawer = false"
+                  class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg theme-btn-neutral">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Search in drawer -->
+              <div class="mb-6">
+                <label class="text-xs font-semibold uppercase tracking-wider theme-text-muted">
+                  {{ t('products.searchLabel') }}
+                </label>
+                <div class="mt-3 flex items-center gap-2">
+                  <input v-model="searchQuery" type="text"
+                    class="min-w-0 flex-1 form-input"
+                    :placeholder="t('products.searchPlaceholder')" />
+                  <button v-if="searchQuery" type="button" @click="clearSearch"
+                    class="shrink-0 whitespace-nowrap px-3 py-2.5 rounded-xl border theme-btn-secondary text-xs">
+                    {{ t('common.cancel') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Categories in drawer -->
+              <h2 class="text-lg font-bold mb-4 theme-text-primary">{{ t('products.categories') }}</h2>
+              <ul class="space-y-2">
+                <li>
+                  <button @click="selectedCategory = null; showFilterDrawer = false"
+                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border min-h-[44px]"
+                    :class="selectedCategory === null
+                      ? 'theme-btn-primary border border-transparent'
+                      : 'border-transparent theme-text-secondary hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'">
+                    {{ t('products.allCategories') }}
+                  </button>
+                </li>
+                <li v-for="category in categories" :key="category.id">
+                  <button @click="selectedCategory = category.id; showFilterDrawer = false"
+                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border flex items-center gap-2 min-h-[44px]"
+                    :class="selectedCategory === category.id
+                      ? 'theme-btn-primary border border-transparent'
+                      : 'border-transparent theme-text-secondary hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'">
+                    <img v-if="category.icon" :src="getImageUrl(category.icon)"
+                      :alt="getLocalizedText(category.name)"
+                      class="h-5 w-5 rounded object-cover" />
+                    {{ getLocalizedText(category.name) }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </Transition>
+
+        <!-- Desktop Sidebar - Categories -->
+        <aside class="hidden lg:block lg:w-64 flex-shrink-0">
+          <div class="theme-panel backdrop-blur-xl border rounded-2xl p-6 sticky top-24">
             <div class="mb-6">
               <label class="text-xs font-semibold uppercase tracking-wider theme-text-muted">
                 {{ t('products.searchLabel') }}
@@ -62,27 +152,41 @@
 
         <!-- Main Content - Products Grid -->
         <main class="flex-1">
-          <!-- Loading State -->
-          <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Loading Skeleton -->
+          <div v-if="loading" class="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
             <div v-for="i in 6" :key="i"
-              class="theme-surface-muted rounded-2xl h-[400px] animate-pulse border">
+              class="theme-panel rounded-2xl border overflow-hidden flex flex-col">
+              <div class="h-36 md:h-56 theme-skeleton"></div>
+              <div class="p-3 md:p-5 space-y-3">
+                <div class="h-3 w-16 rounded theme-skeleton"></div>
+                <div class="h-5 w-3/4 rounded theme-skeleton"></div>
+                <div class="flex gap-2">
+                  <div class="h-5 w-14 rounded-full theme-skeleton"></div>
+                  <div class="h-5 w-14 rounded-full theme-skeleton"></div>
+                </div>
+                <div class="h-3 w-full rounded theme-skeleton"></div>
+                <div class="h-3 w-2/3 rounded theme-skeleton"></div>
+                <div class="border-t theme-border pt-3 flex justify-between items-center">
+                  <div class="h-6 w-20 rounded theme-skeleton"></div>
+                  <div class="h-4 w-16 rounded theme-skeleton"></div>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Products Grid -->
           <div v-else-if="products.length > 0">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="product in products" :key="product.id"
-                class="group relative theme-panel rounded-2xl border transition-all duration-500 overflow-hidden flex flex-col h-full"
+            <div class="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
+              <div v-for="(product, idx) in products" :key="product.id"
+                class="group relative theme-panel rounded-2xl border transition-all overflow-hidden flex flex-col h-full theme-slide-up"
                 :class="isSoldOut(product)
                   ? 'opacity-85 grayscale-[0.25] saturate-50 border-rose-300/60 dark:border-rose-900/40 hover:-translate-y-0 hover:shadow-none hover:border-rose-300/60 dark:hover:border-rose-900/40'
                   : 'theme-card-interactive'"
+                :style="{ animationDelay: `${idx * 50}ms` }"
                 @click="goToProduct(product.slug)">
                 <!-- Image Area -->
-                <div class="h-56 overflow-hidden theme-surface-muted relative shrink-0">
-                  <div
-                    class="absolute inset-0 bg-black/15 z-10">
-                  </div>
+                <div class="h-36 md:h-56 overflow-hidden theme-surface-muted relative shrink-0">
+                  <div class="absolute inset-0 bg-black/15 z-10"></div>
                   <img v-if="product.images && getFirstImageUrl(product.images)" :src="getFirstImageUrl(product.images)"
                     :alt="getLocalizedText(product.title)"
                     class="w-full h-full object-cover transform transition-transform duration-700 ease-out"
@@ -92,7 +196,7 @@
                     class="w-full h-full object-cover transform transition-transform duration-700 ease-out"
                     :class="isSoldOut(product) ? 'grayscale brightness-75' : 'group-hover:scale-110'" />
                   <div v-else class="w-full h-full flex items-center justify-center theme-text-muted">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -100,37 +204,40 @@
 
                   <div v-if="isSoldOut(product)" class="absolute inset-0 z-20 bg-black/45"></div>
                   <div v-if="isSoldOut(product)"
-                    class="absolute left-4 top-4 z-30 theme-badge theme-badge-solid-danger text-xs font-bold tracking-wider shadow-sm">
+                    class="absolute left-2 top-2 md:left-4 md:top-4 z-30 theme-badge theme-badge-solid-danger text-xs font-bold tracking-wider shadow-sm">
                     {{ t('products.stockStatus.outOfStock') }}
                   </div>
 
                   <!-- Tags -->
                   <div v-if="!isSoldOut(product) && product.tags && product.tags.length > 0"
-                    class="absolute top-4 right-4 z-20 flex flex-wrap gap-2 justify-end">
-                    <span v-for="(tag, index) in product.tags.slice(0, 2)" :key="index"
-                      class="theme-badge theme-badge-inverse px-3 py-1 text-xs font-medium">
+                    class="absolute top-2 right-2 md:top-4 md:right-4 z-20 flex flex-wrap gap-1 md:gap-2 justify-end">
+                    <span v-for="(tag, index) in product.tags.slice(0, isMobileGrid ? 1 : 2)" :key="index"
+                      class="theme-badge theme-badge-inverse px-2 md:px-3 py-0.5 md:py-1 text-xs font-medium">
                       {{ tag }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Content Area -->
-                <div class="p-5 relative z-20 flex flex-col flex-1">
-                  <div v-if="product.category?.name" class="text-xs theme-text-muted uppercase tracking-wider mb-2">
+                <div class="p-3 md:p-5 relative z-20 flex flex-col flex-1">
+                  <div v-if="product.category?.name" class="text-xs theme-text-muted uppercase tracking-wider mb-1 md:mb-2 truncate">
                     {{ t('products.categoryLabel') }} · {{ getLocalizedText(product.category.name) }}
                   </div>
-                  <h3
-                    class="text-lg font-bold theme-text-primary mb-2 transition-colors line-clamp-1">
+                  <h3 class="text-sm md:text-lg font-bold theme-text-primary mb-1 md:mb-2 transition-colors line-clamp-1">
                     {{ getLocalizedText(product.title) }}
                   </h3>
 
-                  <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <span
-                      class="theme-badge"
-                      :class="product.purchase_type === 'guest'
-                        ? 'theme-badge-warning'
-                        : 'theme-badge-success'"
-                    >
+                  <!-- Badges: mobile shows only 1 most important -->
+                  <div class="mb-2 md:mb-3 flex flex-wrap items-center gap-1 md:gap-2">
+                    <!-- Mobile: show only fulfillment type badge -->
+                    <span class="md:hidden theme-badge text-xs"
+                      :class="product.fulfillment_type === 'auto' ? 'theme-badge-info' : 'theme-badge-neutral'">
+                      {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+                    </span>
+
+                    <!-- Desktop: show all badges -->
+                    <span class="hidden md:inline-flex theme-badge"
+                      :class="product.purchase_type === 'guest' ? 'theme-badge-warning' : 'theme-badge-success'">
                       <svg v-if="product.purchase_type === 'guest'" class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" />
                         <circle cx="9.5" cy="7" r="3" stroke-width="2" />
@@ -143,12 +250,8 @@
                       {{ getPurchaseTypeLabel(product.purchase_type) }}
                     </span>
 
-                    <span
-                      class="theme-badge"
-                      :class="product.fulfillment_type === 'auto'
-                        ? 'theme-badge-info'
-                        : 'theme-badge-neutral'"
-                    >
+                    <span class="hidden md:inline-flex theme-badge"
+                      :class="product.fulfillment_type === 'auto' ? 'theme-badge-info' : 'theme-badge-neutral'">
                       <svg v-if="product.fulfillment_type === 'auto'" class="mr-1 h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
                       </svg>
@@ -158,30 +261,26 @@
                       {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
                     </span>
 
-                    <span
-                      class="theme-badge"
-                      :class="getStockBadgeClass(product.stock_status)"
-                    >
+                    <span class="hidden md:inline-flex theme-badge"
+                      :class="getStockBadgeClass(product.stock_status)">
                       {{ getStockStatusLabel(product) }}
                     </span>
                   </div>
 
-                  <p class="theme-text-secondary text-sm mb-6 line-clamp-2">
+                  <p class="hidden md:block theme-text-secondary text-sm mb-6 line-clamp-2">
                     {{ getLocalizedText(product.description) }}
                   </p>
 
-                  <div
-                    class="flex items-center justify-between border-t theme-border pt-4 mt-auto">
+                  <div class="flex items-center justify-between border-t theme-border pt-2 md:pt-4 mt-auto">
                     <div class="flex flex-col">
-                      <span class="text-xs theme-text-muted uppercase tracking-wider">{{ t('products.price', 'Price')
-                      }}</span>
-                      <span v-if="hasPromotionPrice(product)" class="text-lg font-bold text-rose-600 dark:text-rose-300 font-mono">
+                      <span class="hidden md:block text-xs theme-text-muted uppercase tracking-wider">{{ t('products.price') }}</span>
+                      <span v-if="hasPromotionPrice(product)" class="theme-price-sm text-rose-600 dark:text-rose-300">
                         {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
                       </span>
-                      <span v-else class="text-lg font-bold theme-text-primary font-mono">
+                      <span v-else class="theme-price-sm theme-text-primary">
                         {{ formatPrice(product.price_amount, siteCurrency) }}
                       </span>
-                      <div v-if="hasPromotionPrice(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <div v-if="hasPromotionPrice(product)" class="hidden md:flex mt-0.5 flex-wrap items-center gap-1.5">
                         <span class="text-xs theme-text-muted opacity-80 line-through">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
                         <span class="theme-badge theme-badge-danger theme-badge-xs">
                           {{ t('products.promotionTag') }}
@@ -190,7 +289,7 @@
                     </div>
 
                     <span
-                      class="text-xs uppercase font-bold transition-colors flex items-center gap-1"
+                      class="hidden md:flex text-xs uppercase font-bold transition-colors items-center gap-1"
                       :class="isSoldOut(product)
                         ? 'text-rose-500/90 dark:text-rose-300/90'
                         : 'text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white'">
@@ -201,6 +300,10 @@
                           d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
                     </span>
+                    <!-- Mobile: arrow only -->
+                    <svg class="md:hidden w-4 h-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -211,7 +314,7 @@
               <nav
                 class="flex items-center space-x-2 theme-panel-soft backdrop-blur-md p-2 rounded-2xl border">
                 <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
-                  class="w-10 h-10 flex items-center justify-center rounded-xl border theme-btn-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                  class="w-12 h-12 flex items-center justify-center rounded-xl border theme-btn-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                   </svg>
@@ -224,7 +327,7 @@
                 </span>
 
                 <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
-                  class="w-10 h-10 flex items-center justify-center rounded-xl border theme-btn-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                  class="w-12 h-12 flex items-center justify-center rounded-xl border theme-btn-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
@@ -235,7 +338,7 @@
 
           <!-- Empty State -->
           <div v-else
-            class="text-center py-20 border theme-panel-soft rounded-2xl backdrop-blur-sm">
+            class="text-center py-20 border theme-panel-soft rounded-2xl backdrop-blur-sm theme-slide-up">
             <svg class="w-20 h-20 mx-auto theme-text-muted mb-6" fill="none" stroke="currentColor"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -252,19 +355,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '../stores/app'
 import { productAPI, categoryAPI } from '../api'
 import { getImageUrl, getFirstImageUrl } from '../utils/image'
 import { debounceAsync } from '../utils/debounce'
-import { amountToCents } from '../utils/money'
+import { useLocalized, useProductLabels } from '../composables/useProduct'
 
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
-const appStore = useAppStore()
+
+const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
 
 const loading = ref(true)
 const products = ref<any[]>([])
@@ -275,75 +379,12 @@ const currentPage = ref(1)
 const pageSize = ref(12)
 const total = ref(0)
 const totalPages = ref(0)
+const showFilterDrawer = ref(false)
 
-const getLocalizedText = (jsonData: any) => {
-  if (!jsonData) return ''
-  const locale = appStore.locale
-  return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
-}
-
-const siteCurrency = computed(() => {
-  const raw = String(appStore.config?.currency || '').trim().toUpperCase()
-  return /^[A-Z]{3}$/.test(raw) ? raw : 'CNY'
-})
-
-const getPurchaseTypeLabel = (purchaseType: string) => {
-  return purchaseType === 'guest' ? t('productPurchase.guest') : t('productPurchase.member')
-}
-
-const getFulfillmentTypeLabel = (fulfillmentType: string) => {
-  return fulfillmentType === 'auto' ? t('products.fulfillmentType.auto') : t('products.fulfillmentType.manual')
-}
-
-const getStockBadgeClass = (status: string) => {
-  switch (status) {
-    case 'unlimited':
-      return 'theme-badge-info'
-    case 'low_stock':
-      return 'theme-badge-warning'
-    case 'out_of_stock':
-      return 'theme-badge-danger'
-    default:
-      return 'theme-badge-success'
-  }
-}
-
-const getStockStatusLabel = (product: any) => {
-  const status = product?.stock_status || ''
-  if (status === 'unlimited') return t('products.stockStatus.unlimited')
-  if (status === 'out_of_stock') return t('products.stockStatus.outOfStock')
-  if (status === 'low_stock') {
-    const count = Number(product?.fulfillment_type === 'manual' ? product?.manual_stock_available : product?.auto_stock_available)
-    if (Number.isFinite(count) && count > 0) {
-      return t('products.stockStatus.lowStockCount', { count })
-    }
-    return t('products.stockStatus.lowStock')
-  }
-  return t('products.stockStatus.inStock')
-}
-
-const isSoldOut = (product: any) => Boolean(product?.is_sold_out || product?.stock_status === 'out_of_stock')
-
-const formatPrice = (amount: any, currency: any) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
-}
-
-const parsePriceAmount = (amount: any) => {
-  return amountToCents(amount)
-}
-
-const getPromotionPriceAmount = (product: any) => product?.promotion_price_amount
-
-const hasPromotionPrice = (product: any) => {
-  if (!product) return false
-  const original = parsePriceAmount(product.price_amount)
-  const promotion = parsePriceAmount(product.promotion_price_amount)
-  if (original === null || promotion === null) return false
-  return promotion >= 0 && promotion < original
+// Detect mobile 2-col grid (< md breakpoint)
+const isMobileGrid = ref(window.innerWidth < 768)
+const handleResize = () => {
+  isMobileGrid.value = window.innerWidth < 768
 }
 
 const loadProducts = async () => {
@@ -423,6 +464,7 @@ watch(searchQuery, () => {
 })
 
 onMounted(async () => {
+  window.addEventListener('resize', handleResize, { passive: true })
   await debouncedLoadCategories()
   // 如果是 /categories/:slug 路由，根据 slug 自动选中分类
   const slugParam = route.params.slug as string | undefined
@@ -438,12 +480,20 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   debouncedLoadProducts.cancel()
   debouncedLoadCategories.cancel()
 })
 </script>
 
 <style scoped>
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;

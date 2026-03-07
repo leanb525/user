@@ -2,9 +2,9 @@
   <footer
     class="relative theme-panel-strong theme-text-secondary border-t theme-border overflow-hidden">
     <div class="container mx-auto px-4 py-16 relative z-10">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
         <!-- Brand -->
-        <div class="md:col-span-2 space-y-6">
+        <div class="col-span-2 space-y-6">
           <div class="flex items-center space-x-3">
             <div
               class="w-8 h-8 theme-btn-primary rounded-lg flex items-center justify-center">

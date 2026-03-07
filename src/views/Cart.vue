@@ -6,25 +6,41 @@
         <p class="text-sm theme-text-secondary">{{ t('cart.subtitle') }}</p>
       </div>
 
+      <!-- Step Indicator with numbers and connecting lines -->
       <div class="mb-8 rounded-2xl border border-gray-200 theme-panel-soft p-4 backdrop-blur">
-        <div class="grid grid-cols-3 gap-3">
-          <div
-            v-for="step in flowSteps"
-            :key="step.key"
-            class="theme-step-chip"
-            :class="step.active
-              ? 'theme-step-chip-active'
-              : 'theme-step-chip-inactive'"
-          >
-            {{ step.label }}
-          </div>
+        <div class="flex items-center">
+          <template v-for="(step, idx) in flowSteps" :key="step.key">
+            <div class="flex items-center gap-2" :class="idx === 0 ? '' : 'flex-1'">
+              <!-- Connecting line (before step, except first) -->
+              <div v-if="idx > 0" class="flex-1 h-0.5 rounded-full transition-colors"
+                :class="step.active ? 'bg-current theme-text-accent' : 'theme-surface-muted'"></div>
+              <!-- Step circle + label -->
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors"
+                  :class="step.active
+                    ? 'theme-btn-primary border-transparent'
+                    : 'border-gray-300 dark:border-gray-600 theme-text-muted'">
+                  {{ idx + 1 }}
+                </span>
+                <span class="text-sm font-medium hidden sm:inline"
+                  :class="step.active ? 'theme-text-primary' : 'theme-text-muted'">
+                  {{ step.label }}
+                </span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
+      <!-- Empty State -->
       <div
         v-if="cartItems.length === 0"
-        class="rounded-2xl border theme-panel p-12 text-center"
+        class="rounded-2xl border theme-panel p-12 text-center theme-slide-up"
       >
+        <svg class="w-16 h-16 mx-auto theme-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.3 2.6a1 1 0 00.9 1.4H19M7 13l.4 2M10 21a1 1 0 100-2 1 1 0 000 2zm8 1a1 1 0 100-2 1 1 0 000 2z" />
+        </svg>
         <p class="mb-6 theme-text-muted">{{ t('cart.empty') }}</p>
         <router-link
           to="/products"
@@ -39,11 +55,11 @@
           <article
             v-for="item in cartItems"
             :key="cartItemKey(item)"
-            class="rounded-2xl border theme-panel p-5"
+            class="rounded-2xl border theme-panel p-4 md:p-5"
           >
-            <div class="flex gap-5">
+            <div class="flex gap-4 md:gap-5">
               <div
-                class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm dark:border-white/10 dark:bg-black/30 sm:h-20 sm:w-20"
+                class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm dark:border-white/10 dark:bg-black/30"
               >
                 <img
                   v-if="cartItemImage(item)"
@@ -65,19 +81,19 @@
                 </div>
               </div>
 
-              <div class="flex-1">
-                <div class="flex items-start justify-between gap-4">
-                  <div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
                     <router-link
                       :to="`/products/${item.slug}`"
-                      class="text-lg font-bold theme-link"
+                      class="text-base md:text-lg font-bold theme-link line-clamp-1"
                     >
                       {{ getLocalizedText(item.title) }}
                     </router-link>
                     <p class="mt-1 text-sm theme-text-muted">{{ t('cart.priceLabel') }}：{{ formatPrice(item.priceAmount, totalCurrency) }}</p>
-                    <p v-if="itemSkuDisplay(item)" class="mt-1 text-xs theme-text-muted">{{ t('cart.skuLabel') }}：{{ itemSkuDisplay(item) }}</p>
+                    <p v-if="itemSkuDisplay(item)" class="mt-1 text-xs theme-text-muted truncate">{{ t('cart.skuLabel') }}：{{ itemSkuDisplay(item) }}</p>
                     <p v-if="itemStockHint(item)" class="mt-1 text-xs theme-text-muted">{{ itemStockHint(item) }}</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
+                    <div class="mt-2 md:mt-3 flex flex-wrap gap-2">
                       <span
                         class="theme-badge text-xs uppercase tracking-wider"
                         :class="item.purchaseType === 'guest'
@@ -98,18 +114,21 @@
                   </div>
                   <button
                     @click="cartStore.removeItem(item.productId, item.skuId)"
-                    class="text-sm theme-link-muted transition-colors hover:text-red-500"
+                    class="text-sm theme-link-muted transition-colors hover:text-red-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
-                    {{ t('cart.remove') }}
+                    <svg class="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="hidden md:inline">{{ t('cart.remove') }}</span>
                   </button>
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-white/5">
+                <div class="mt-3 md:mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3 md:pt-4 dark:border-white/5">
                   <div class="flex items-center gap-2">
                     <button
                       @click="updateQty(item, item.quantity - 1)"
                       :disabled="item.quantity <= 1"
-                      class="h-8 w-8 rounded-lg border theme-btn-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                      class="h-10 w-10 rounded-lg border theme-btn-secondary disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center text-base font-medium"
                     >
                       -
                     </button>
@@ -126,7 +145,7 @@
                     <button
                       @click="updateQty(item, item.quantity + 1)"
                       :disabled="item.quantity >= itemMaxQuantity(item)"
-                      class="h-8 w-8 rounded-lg border theme-btn-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                      class="h-10 w-10 rounded-lg border theme-btn-secondary disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center text-base font-medium"
                     >
                       +
                     </button>
@@ -154,7 +173,7 @@
             </div>
             <div class="flex items-center justify-between">
               <span>{{ t('cart.totalLabel') }}</span>
-              <span class="font-mono text-lg font-bold theme-text-primary">{{ formatPrice(totalAmount, totalCurrency) }}</span>
+              <span class="theme-price-sm theme-text-primary">{{ formatPrice(totalAmount, totalCurrency) }}</span>
             </div>
             <div class="rounded-lg border theme-surface-soft p-3 text-xs theme-text-muted">
               {{ t('cart.disclaimer') }}
@@ -190,10 +209,14 @@ import { amountToCents, centsToAmount, parseInteger } from '../utils/money'
 import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
 import { refreshCartStockSnapshots } from '../utils/cartStock'
 import { getImageUrl } from '../utils/image'
+import { useLocalized } from '../composables/useProduct'
 
 const cartStore = useCartStore()
 const appStore = useAppStore()
 const { t } = useI18n()
+
+const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const totalCurrency = computed(() => siteCurrency.value || 'CNY')
 
 const cartItems = computed(() => cartStore.items)
 const totalItems = computed(() => cartStore.totalItems)
@@ -207,36 +230,12 @@ const totalAmount = computed(() => {
   }, 0)
   return centsToAmount(totalCents)
 })
-const siteCurrency = computed(() => {
-  const raw = String(appStore.config?.currency || '').trim().toUpperCase()
-  return /^[A-Z]{3}$/.test(raw) ? raw : ''
-})
-const totalCurrency = computed(() => {
-  if (siteCurrency.value) {
-    return siteCurrency.value
-  }
-  return 'CNY'
-})
 
 const flowSteps = computed(() => ([
   { key: 'cart', label: t('cart.title'), active: true },
   { key: 'checkout', label: t('checkout.title'), active: false },
   { key: 'payment', label: t('payment.title'), active: false },
 ]))
-
-const getLocalizedText = (jsonData: any) => {
-  if (!jsonData) return ''
-  const locale = appStore.locale
-  return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
-}
-
-const formatPrice = (amount: any, currency: any) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
-}
 
 const itemSubtotal = (item: CartItem) => {
   const amountCents = amountToCents(item.priceAmount)
@@ -358,5 +357,12 @@ onMounted(() => {
 .cart-qty-input::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
+}
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 </style>

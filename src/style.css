@@ -45,6 +45,28 @@
   --ui-leading-title: 1.2;
   --ui-leading-body: 1.62;
 
+  /* Warm accent colors */
+  --ui-accent-warm: #d97706;
+  --ui-accent-warm-hover: #b45309;
+  --ui-accent-warm-soft: rgba(217, 119, 6, 0.14);
+
+  /* Price tokens */
+  --ui-price-primary: #1d1d1f;
+  --ui-price-promotion: #dc2626;
+  --ui-price-original: #6e6e73;
+
+  /* Animation durations */
+  --ui-duration-fast: 150ms;
+  --ui-duration-normal: 250ms;
+  --ui-duration-slow: 400ms;
+
+  /* Easing functions */
+  --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Section spacing */
+  --ui-section-gap: 2rem;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -81,6 +103,16 @@
   --ui-shadow-3: 0 36px 76px -34px rgba(0, 0, 0, 0.84);
   --ui-shadow-soft: 0 22px 46px -30px rgba(0, 0, 0, 0.78);
   --ui-shadow-card: 0 30px 70px -34px rgba(0, 0, 0, 0.88);
+
+  /* Warm accent colors (dark) */
+  --ui-accent-warm: #fbbf24;
+  --ui-accent-warm-hover: #f59e0b;
+  --ui-accent-warm-soft: rgba(251, 191, 36, 0.22);
+
+  /* Price tokens (dark) */
+  --ui-price-primary: #f5f5f7;
+  --ui-price-promotion: #f87171;
+  --ui-price-original: #8e8e93;
 }
 
 html,
@@ -684,6 +716,112 @@ body {
     border-color: var(--ui-accent);
     box-shadow: 0 0 0 3px var(--ui-focus-ring);
   }
+
+  /* Price typography */
+  .theme-price-lg {
+    font-size: 2.75rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--ui-price-primary);
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  }
+
+  .theme-price-sm {
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--ui-price-primary);
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  }
+
+  .theme-price-promotion {
+    color: var(--ui-price-promotion);
+  }
+
+  .theme-price-original {
+    color: var(--ui-price-original);
+    text-decoration: line-through;
+    opacity: 0.8;
+  }
+
+  /* Section divider */
+  .theme-section-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--ui-border), transparent);
+    margin: var(--ui-section-gap) 0;
+  }
+
+  /* Skeleton shimmer */
+  .theme-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--ui-bg-muted) 25%,
+      var(--ui-bg-soft) 37%,
+      var(--ui-bg-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: theme-shimmer 1.4s ease infinite;
+    border-radius: var(--ui-radius-sm);
+  }
+
+  /* Animation classes */
+  .theme-fade-in {
+    animation: theme-fade-in var(--ui-duration-normal) var(--ui-ease-out) both;
+  }
+
+  .theme-slide-up {
+    animation: theme-slide-up var(--ui-duration-normal) var(--ui-ease-out) both;
+  }
+
+  .theme-scale-in {
+    animation: theme-scale-in var(--ui-duration-fast) var(--ui-ease-spring) both;
+  }
+
+  .theme-bounce-in {
+    animation: theme-bounce-in var(--ui-duration-slow) var(--ui-ease-spring) both;
+  }
+
+  /* Auth page background */
+  .theme-auth-page {
+    background: radial-gradient(ellipse at 50% 0%, var(--ui-accent-soft) 0%, var(--ui-bg-page) 70%);
+    min-height: 100vh;
+  }
+
+  /* Safe area bottom padding for fixed elements */
+  .theme-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+@keyframes theme-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes theme-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes theme-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes theme-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes theme-bounce-in {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 @layer utilities {
