@@ -120,91 +120,14 @@
         </div>
 
         <div v-if="products.length > 0" class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          <article
+          <ProductCard
             v-for="(product, idx) in products"
             :key="product.id"
-            class="group cursor-pointer overflow-hidden rounded-2xl border theme-panel shadow-sm transition flex h-full flex-col theme-slide-up"
-            :style="{ animationDelay: `${idx * 60}ms` }"
-            :class="isSoldOut(product)
-              ? 'opacity-85 grayscale-[0.25] saturate-50 border-rose-300/60 dark:border-rose-900/40 hover:-translate-y-0 hover:shadow-sm'
-              : 'hover:-translate-y-1 hover:shadow-lg'"
-            @click="goToProduct(product.slug)"
-          >
-            <div class="relative h-36 md:h-44 lg:h-40 overflow-hidden theme-surface-muted shrink-0">
-              <img
-                v-if="product.images && getFirstImageUrl(product.images)"
-                :src="getFirstImageUrl(product.images)"
-                :alt="getLocalizedText(product.title)"
-                class="h-full w-full object-cover transition duration-500"
-                :class="isSoldOut(product) ? 'grayscale brightness-75' : 'group-hover:scale-105'"
-              />
-              <div v-else class="flex h-full items-center justify-center text-sm text-gray-400">{{ t('home.featured.empty') }}</div>
-
-              <div v-if="isSoldOut(product)" class="absolute inset-0 z-10 bg-black/45"></div>
-              <div
-                v-if="isSoldOut(product)"
-                class="absolute left-3 top-3 z-20 theme-badge theme-badge-solid-danger text-[11px] font-bold tracking-wider shadow-sm"
-              >
-                {{ t('products.stockStatus.outOfStock') }}
-              </div>
-
-              <div v-if="!isSoldOut(product) && product.tags && product.tags.length > 0" class="absolute right-3 top-3 flex max-w-[70%] flex-wrap justify-end gap-1.5">
-                <span
-                  v-for="(tag, index) in product.tags.slice(0, 2)"
-                  :key="index"
-                  class="theme-badge theme-badge-inverse px-2 py-0.5 text-[11px] font-medium"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-            <div class="space-y-1.5 p-3 md:p-4">
-              <h3 class="line-clamp-1 text-sm md:text-base font-semibold theme-text-primary">{{ getLocalizedText(product.title) }}</h3>
-
-              <!-- Simplified badges for home: only show stock status (non-in-stock) and fulfillment type -->
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span
-                  v-if="product.stock_status && product.stock_status !== 'in_stock'"
-                  class="theme-badge theme-badge-xs"
-                  :class="getStockBadgeClass(product.stock_status)"
-                >
-                  {{ getStockStatusLabel(product) }}
-                </span>
-
-                <span
-                  class="theme-badge theme-badge-xs"
-                  :class="product.fulfillment_type === 'auto'
-                    ? 'theme-badge-info'
-                    : 'theme-badge-neutral'"
-                >
-                  {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
-                </span>
-              </div>
-
-              <p class="line-clamp-2 text-xs md:text-sm theme-text-secondary hidden md:block">{{ getLocalizedText(product.description) }}</p>
-              <div class="pt-1">
-                <div class="flex flex-col">
-                  <span v-if="hasPromotionPrice(product)" class="theme-price-sm theme-price-promotion">
-                    {{ siteCurrency }} {{ getPromotionPriceAmount(product) }}
-                  </span>
-                  <span v-else class="theme-price-sm">
-                    {{ siteCurrency }} {{ product.price_amount }}
-                  </span>
-                  <div v-if="hasPromotionPrice(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    <span class="text-xs theme-price-original">{{ siteCurrency }} {{ product.price_amount }}</span>
-                    <span class="theme-badge theme-badge-danger theme-badge-xs">
-                      {{ t('products.promotionTag') }}
-                    </span>
-                  </div>
-                  <div v-else-if="hasPromotionRules(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    <span class="theme-badge theme-badge-warning theme-badge-xs">
-                      {{ t('products.promotionBadge') }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </article>
+            :product="product"
+            :index="idx"
+            :animation-step="60"
+            @click="goToProduct"
+          />
         </div>
         <div v-else class="rounded-2xl border border-dashed theme-border py-16 text-center theme-text-muted theme-slide-up">
           <svg class="mx-auto h-16 w-16 mb-4 theme-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,14 +179,14 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { bannerAPI, postAPI, productAPI } from '../api'
-import { getFirstImageUrl, getImageUrl } from '../utils/image'
+import { getImageUrl } from '../utils/image'
 import { debounceAsync } from '../utils/debounce'
-import { useLocalized, useProductLabels } from '../composables/useProduct'
+import { useLocalized } from '../composables/useProduct'
+import ProductCard from '../components/ProductCard.vue'
 
 const router = useRouter()
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency } = useLocalized()
-const { getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules } = useProductLabels()
+const { getLocalizedText } = useLocalized()
 
 const products = ref<any[]>([])
 const posts = ref<any[]>([])
