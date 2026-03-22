@@ -92,6 +92,19 @@ export const useUserAuthStore = defineStore('user-auth', () => {
         }
     }
 
+    const telegramMiniAppLogin = async (initData: string) => {
+        loading.value = true
+        try {
+            const response = await userAuthAPI.telegramMiniAppLogin({ init_data: initData })
+            const { token: accessToken, user: userData } = response.data.data
+            setToken(accessToken)
+            setUser(userData)
+            return true
+        } finally {
+            loading.value = false
+        }
+    }
+
     const forgotPassword = async (payload: any) => {
         loading.value = true
         try {
@@ -129,6 +142,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
         register,
         login,
         telegramLogin,
+        telegramMiniAppLogin,
         forgotPassword,
         syncUserProfile,
         logout,

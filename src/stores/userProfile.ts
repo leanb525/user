@@ -252,6 +252,21 @@ export const useUserProfileStore = defineStore('user-profile', () => {
         }
     }
 
+    const bindTelegramMiniApp = async (initData: string) => {
+        bindingTelegram.value = true
+        clearSecurityError()
+        try {
+            const response = await userProfileAPI.bindTelegramMiniApp({ init_data: initData })
+            telegramBinding.value = response.data.data || { bound: true }
+            return true
+        } catch (error) {
+            securityError.value = normalizeErrorMessage(error, '绑定 Telegram 失败')
+            return false
+        } finally {
+            bindingTelegram.value = false
+        }
+    }
+
     const unbindTelegram = async () => {
         unbindingTelegram.value = true
         clearSecurityError()
@@ -301,6 +316,7 @@ export const useUserProfileStore = defineStore('user-profile', () => {
         loadRecentLoginLogs,
         loadTelegramBinding,
         bindTelegram,
+        bindTelegramMiniApp,
         unbindTelegram,
     }
 })

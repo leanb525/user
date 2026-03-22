@@ -92,12 +92,17 @@
 
               <div v-else class="theme-surface-soft border rounded-2xl p-6">
                 <div class="text-sm theme-text-muted mb-3">{{ t('payment.openPayLink') }}</div>
-                <a :href="paymentResult.pay_url" target="_blank"
+                <button
+                  type="button"
+                  @click="handleOpenPayLink"
                   class="theme-btn-inline-md border theme-btn-secondary font-semibold">
                   {{ t('payment.openPayLink') }}
-                </a>
+                </button>
                 <div v-if="openedPayWindow" class="mt-3 text-xs text-emerald-500">
-                  {{ t('payment.redirectOpened') }}
+                  {{ payLinkOpenedTip }}
+                </div>
+                <div v-if="showTelegramPayHint" class="mt-3 text-xs theme-text-muted">
+                  {{ t('payment.telegramExternalHint') }}
                 </div>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   <button @click="handleCopyPayLink"
@@ -339,14 +344,19 @@
             </div>
 
             <div v-if="showPayLink" class="mt-6 flex flex-col md:flex-row md:items-center gap-3">
-              <a :href="paymentResult.pay_url" target="_blank"
+              <button
+                type="button"
+                @click="handleOpenPayLink"
                 class="theme-btn-inline-md border theme-btn-secondary font-semibold text-center">
                 {{ t('payment.openPayLink') }}
-              </a>
+              </button>
               <button @click="handleCopyPayLink"
                 class="theme-btn-inline-md border theme-btn-secondary">
                 {{ t('payment.copyPayLink') }}
               </button>
+              <div v-if="showTelegramPayHint" class="text-xs theme-text-muted">
+                {{ t('payment.telegramExternalHint') }}
+              </div>
               <div class="text-xs theme-text-muted break-all">
                 {{ t('payment.payLinkLabel') }}：{{ paymentResult.pay_url }}
               </div>
@@ -407,6 +417,7 @@ import { NavigationFailureType, isNavigationFailure, useRoute, useRouter } from 
 import { useI18n } from 'vue-i18n'
 import { guestOrderAPI, paymentAPI, userOrderAPI, walletAPI } from '../api'
 import { useAppStore } from '../stores/app'
+import { useTelegramMiniAppStore } from '../stores/telegramMiniApp'
 import { orderStatusLabel } from '../utils/status'
 import { fulfillmentTypeLabel } from '../utils/fulfillment'
 import { debounceAsync } from '../utils/debounce'
@@ -419,6 +430,7 @@ import { pageAlertClass, type PageAlert } from '../utils/alerts'
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const telegramMiniAppStore = useTelegramMiniAppStore()
 const { t } = useI18n()
 
 const loading = ref(true)
@@ -577,6 +589,11 @@ const paymentGuideTip = computed(() => interactionMode.value === 'redirect' ? t(
 const showPayLink = computed(() => {
   return interactionMode.value === 'redirect' || Boolean(payLink.value)
 })
+const isTelegramMiniApp = computed(() => telegramMiniAppStore.isMiniApp && telegramMiniAppStore.isReady)
+const showTelegramPayHint = computed(() => isTelegramMiniApp.value && Boolean(payLink.value))
+const payLinkOpenedTip = computed(() => (
+  isTelegramMiniApp.value ? t('payment.redirectOpenedTelegram') : t('payment.redirectOpened')
+))
 
 const payLink = computed(() => String(paymentResult.value?.pay_url || '').trim())
 const qrCodeContent = computed(() => String(paymentResult.value?.qr_code || '').trim())
@@ -915,6 +932,21 @@ const handleCopyPayLink = async () => {
   }
 }
 
+const openPayLinkInCompatibleWindow = () => {
+  if (!payLink.value) return
+  if (isTelegramMiniApp.value) {
+    telegramMiniAppStore.openLink(payLink.value)
+  } else {
+    window.open(payLink.value, '_blank', 'noopener')
+  }
+  openedPayWindow.value = true
+}
+
+const handleOpenPayLink = () => {
+  error.value = ''
+  openPayLinkInCompatibleWindow()
+}
+
 const loadLatestPayment = async () => {
   if (!order.value || order.value.status !== 'pending_payment') return
   if (paymentResult.value) return
@@ -1132,8 +1164,7 @@ const performPayment = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     const mode = String(paymentResult.value?.interaction_mode || '').toLowerCase()
     if (mode === 'redirect' && payLink.value) {
-      window.open(payLink.value, '_blank', 'noopener')
-      openedPayWindow.value = true
+      openPayLinkInCompatibleWindow()
     }
   } catch (err: any) {
     error.value = err.message || t('payment.createFailed')

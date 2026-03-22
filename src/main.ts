@@ -5,13 +5,17 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
+import { useTelegramMiniAppStore } from './stores/telegramMiniApp'
 
 const app = createApp(App)
 const head = createHead()
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(head)
 app.use(router)
 app.use(i18n)
+
+useTelegramMiniAppStore(pinia).init()
 
 app.mount('#app')

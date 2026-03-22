@@ -116,7 +116,7 @@
             {{ userAuthStore.loading ? t('auth.login.submitting') : t('auth.login.submit') }}
           </button>
 
-          <div v-if="telegramEnabled" class="space-y-3 pt-1">
+          <div v-if="showTelegramWidget" class="space-y-3 pt-1">
             <div class="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] theme-text-muted">
               <span class="h-px flex-1 border-t border-gray-200/80 dark:border-white/10"></span>
               <span>{{ t('auth.login.telegramOr') }}</span>
@@ -125,6 +125,28 @@
             <div ref="telegramWidgetRef" class="flex justify-center"></div>
             <p class="text-center text-xs theme-text-muted">
               {{ t('auth.login.telegramHint') }}
+            </p>
+            <div v-if="showTelegramMiniAppEntry" class="space-y-2">
+              <p class="text-center text-xs theme-text-muted">
+                {{ t('auth.login.telegramMiniAppEntryHint') }}
+              </p>
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl border theme-btn-secondary px-4 py-3 text-sm font-semibold"
+                @click="openTelegramMiniAppEntry"
+              >
+                {{ t('auth.login.telegramMiniAppEntryAction') }}
+              </button>
+            </div>
+          </div>
+          <div v-else-if="showMiniAppLoginHint" class="space-y-3 pt-1">
+            <div class="flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] theme-text-muted">
+              <span class="h-px flex-1 border-t border-gray-200/80 dark:border-white/10"></span>
+              <span>{{ t('auth.login.telegramOr') }}</span>
+              <span class="h-px flex-1 border-t border-gray-200/80 dark:border-white/10"></span>
+            </div>
+            <p class="text-center text-xs theme-text-muted">
+              {{ attemptingMiniAppLogin ? t('auth.login.telegramMiniAppLoggingIn') : t('auth.login.telegramMiniAppHint') }}
             </p>
           </div>
         </form>
@@ -149,6 +171,8 @@ import { useUserAuthStore } from '../../stores/userAuth'
 import { useI18n } from 'vue-i18n'
 import { debounceAsync } from '../../utils/debounce'
 import { useAppStore } from '../../stores/app'
+import { useTelegramMiniAppStore } from '../../stores/telegramMiniApp'
+import { buildTelegramMiniAppEntryLink, openTelegramCompatibleLink } from '../../utils/telegramMiniApp'
 import type { CaptchaPayload, TelegramAuthPayload } from '../../api'
 import ImageCaptcha from '../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../components/captcha/TurnstileCaptcha.vue'
@@ -157,6 +181,7 @@ const router = useRouter()
 const route = useRoute()
 const userAuthStore = useUserAuthStore()
 const appStore = useAppStore()
+const telegramMiniAppStore = useTelegramMiniAppStore()
 const { t } = useI18n()
 
 const brandSiteName = computed(() => {
@@ -181,9 +206,18 @@ const loginCaptchaEnabled = computed(() => !!captchaConfig.value?.scenes?.login 
 const turnstileSiteKey = computed(() => String(captchaConfig.value?.turnstile?.site_key || ''))
 const telegramConfig = computed(() => appStore.config?.telegram_auth || null)
 const telegramBotUsername = computed(() => String(telegramConfig.value?.bot_username || '').trim())
+const telegramMiniAppURL = computed(() => String(telegramConfig.value?.mini_app_url || '').trim())
 const telegramEnabled = computed(() => !!telegramConfig.value?.enabled && telegramBotUsername.value !== '')
 const registrationEnabled = computed(() => appStore.config?.registration_enabled !== false)
+const isTelegramMiniApp = computed(() => telegramMiniAppStore.isMiniApp && telegramMiniAppStore.isReady)
+const miniAppInitData = computed(() => String(telegramMiniAppStore.initData || '').trim())
+const showTelegramWidget = computed(() => telegramEnabled.value && !isTelegramMiniApp.value)
+const showMiniAppLoginHint = computed(() => isTelegramMiniApp.value)
+const telegramMiniAppEntryLink = computed(() => buildTelegramMiniAppEntryLink(telegramBotUsername.value, telegramMiniAppURL.value))
+const showTelegramMiniAppEntry = computed(() => !isTelegramMiniApp.value && telegramMiniAppEntryLink.value !== '')
 const telegramCallbackName = '__dujiaoUserTelegramLogin'
+const miniAppLoginAttempted = ref(false)
+const attemptingMiniAppLogin = ref(false)
 
 const getCaptchaPayload = (): CaptchaPayload | undefined => {
   if (!loginCaptchaEnabled.value) return undefined
@@ -205,6 +239,16 @@ const handleCaptchaConfigStale = async () => {
   await appStore.loadConfig(true)
   captchaPayload.value = {}
   turnstileToken.value = ''
+}
+
+const redirectAfterLogin = () => {
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/me/orders'
+  return router.push(redirect)
+}
+
+const openTelegramMiniAppEntry = () => {
+  if (telegramMiniAppEntryLink.value === '') return
+  openTelegramCompatibleLink(telegramMiniAppEntryLink.value)
 }
 
 const performLogin = async () => {
@@ -232,8 +276,7 @@ const performLogin = async () => {
       remember_me: rememberMe.value,
       captcha_payload: getCaptchaPayload(),
     })
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/me/orders'
-    router.push(redirect)
+    await redirectAfterLogin()
   } catch (err: any) {
     error.value = err.message || t('auth.login.error')
     if (captchaProvider.value === 'image') {
@@ -275,10 +318,28 @@ const handleTelegramAuth = async (raw: any) => {
   }
   try {
     await userAuthStore.telegramLogin(payload)
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/me/orders'
-    router.push(redirect)
+    await redirectAfterLogin()
   } catch (err: any) {
     error.value = err.message || t('auth.login.telegramLoginFailed')
+  }
+}
+
+const tryTelegramMiniAppLogin = async () => {
+  if (!isTelegramMiniApp.value || miniAppInitData.value === '' || miniAppLoginAttempted.value || attemptingMiniAppLogin.value) {
+    return
+  }
+
+  miniAppLoginAttempted.value = true
+  attemptingMiniAppLogin.value = true
+  error.value = ''
+
+  try {
+    await userAuthStore.telegramMiniAppLogin(miniAppInitData.value)
+    await redirectAfterLogin()
+  } catch (err: any) {
+    error.value = err.message || t('auth.login.telegramLoginFailed')
+  } finally {
+    attemptingMiniAppLogin.value = false
   }
 }
 
@@ -289,7 +350,7 @@ const clearTelegramWidget = () => {
 }
 
 const renderTelegramWidget = () => {
-  if (!telegramEnabled.value || !telegramWidgetRef.value) {
+  if (!showTelegramWidget.value || !telegramWidgetRef.value) {
     clearTelegramWidget()
     return
   }
@@ -321,10 +382,16 @@ onMounted(async () => {
     delete nextQuery.reason
     router.replace({ path: route.path, query: nextQuery })
   }
+
+  await tryTelegramMiniAppLogin()
 })
 
-watch([telegramEnabled, telegramBotUsername], () => {
+watch([showTelegramWidget, telegramBotUsername], () => {
   renderTelegramWidget()
+})
+
+watch([isTelegramMiniApp, miniAppInitData], () => {
+  void tryTelegramMiniAppLogin()
 })
 
 onUnmounted(() => {

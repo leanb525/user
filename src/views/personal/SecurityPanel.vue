@@ -61,13 +61,54 @@
           <p v-if="!canUnbindTelegram" class="text-xs theme-text-muted">
             {{ t('personalCenter.security.telegramUnbindDisabledTip') }}
           </p>
+          <div v-if="showTelegramMiniAppEntry" class="space-y-2 rounded-xl border border-dashed border-gray-200/80 px-4 py-3 dark:border-white/10">
+            <p class="text-xs theme-text-muted">
+              {{ t('personalCenter.security.telegramMiniAppEntryHint') }}
+            </p>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border theme-btn-secondary px-4 py-2.5 text-xs font-semibold"
+              @click="openTelegramMiniAppEntry"
+            >
+              {{ t('personalCenter.security.telegramMiniAppEntryAction') }}
+            </button>
+          </div>
         </div>
 
         <div v-else class="mt-4 space-y-3">
           <p class="text-xs theme-text-muted">
-            {{ telegramEnabled ? t('personalCenter.security.telegramUnboundTip') : t('personalCenter.security.telegramDisabledTip') }}
+            {{
+              telegramEnabled
+                ? (showMiniAppBindAction ? t('personalCenter.security.telegramMiniAppBindHint') : t('personalCenter.security.telegramUnboundTip'))
+                : t('personalCenter.security.telegramDisabledTip')
+            }}
           </p>
-          <div v-if="telegramEnabled" ref="telegramWidgetRef" class="flex justify-start"></div>
+          <button
+            v-if="showMiniAppBindAction"
+            type="button"
+            class="inline-flex items-center justify-center rounded-xl theme-btn-primary px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="userProfileStore.bindingTelegram || miniAppInitData === ''"
+            @click="handleTelegramMiniAppBind"
+          >
+            {{
+              userProfileStore.bindingTelegram
+                ? t('personalCenter.security.telegramMiniAppBinding')
+                : t('personalCenter.security.telegramMiniAppBindAction')
+            }}
+          </button>
+          <div v-else-if="showTelegramWidget" ref="telegramWidgetRef" class="flex justify-start"></div>
+          <div v-if="showTelegramMiniAppEntry" class="space-y-2 rounded-xl border border-dashed border-gray-200/80 px-4 py-3 dark:border-white/10">
+            <p class="text-xs theme-text-muted">
+              {{ t('personalCenter.security.telegramMiniAppEntryHint') }}
+            </p>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border theme-btn-secondary px-4 py-2.5 text-xs font-semibold"
+              @click="openTelegramMiniAppEntry"
+            >
+              {{ t('personalCenter.security.telegramMiniAppEntryAction') }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -252,11 +293,14 @@ import { useI18n } from 'vue-i18n'
 import { pageAlertClass, type PageAlert } from '../../utils/alerts'
 import type { TelegramAuthPayload } from '../../api'
 import { useAppStore } from '../../stores/app'
+import { useTelegramMiniAppStore } from '../../stores/telegramMiniApp'
 import { useUserProfileStore } from '../../stores/userProfile'
 import { useUserAuthStore } from '../../stores/userAuth'
+import { buildTelegramMiniAppEntryLink, openTelegramCompatibleLink } from '../../utils/telegramMiniApp'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const telegramMiniAppStore = useTelegramMiniAppStore()
 const userProfileStore = useUserProfileStore()
 const userAuthStore = useUserAuthStore()
 
@@ -281,8 +325,15 @@ const telegramCallbackName = '__dujiaoSecurityTelegramBind'
 
 const telegramConfig = computed(() => appStore.config?.telegram_auth || null)
 const telegramBotUsername = computed(() => String(telegramConfig.value?.bot_username || '').trim())
+const telegramMiniAppURL = computed(() => String(telegramConfig.value?.mini_app_url || '').trim())
 const telegramEnabled = computed(() => !!telegramConfig.value?.enabled && telegramBotUsername.value !== '')
 const telegramBound = computed(() => !!userProfileStore.telegramBinding?.bound)
+const isTelegramMiniApp = computed(() => telegramMiniAppStore.isMiniApp && telegramMiniAppStore.isReady)
+const miniAppInitData = computed(() => String(telegramMiniAppStore.initData || '').trim())
+const showMiniAppBindAction = computed(() => telegramEnabled.value && !telegramBound.value && isTelegramMiniApp.value)
+const showTelegramWidget = computed(() => telegramEnabled.value && !telegramBound.value && !isTelegramMiniApp.value)
+const telegramMiniAppEntryLink = computed(() => buildTelegramMiniAppEntryLink(telegramBotUsername.value, telegramMiniAppURL.value))
+const showTelegramMiniAppEntry = computed(() => !isTelegramMiniApp.value && telegramMiniAppEntryLink.value !== '')
 const emailChangeMode = computed(() => userProfileStore.profile?.email_change_mode || 'change_with_old_and_new')
 const requiresOldEmailCode = computed(() => emailChangeMode.value !== 'bind_only')
 const canManagePassword = computed(() => requiresOldEmailCode.value)
@@ -301,6 +352,11 @@ const telegramDisplayName = computed(() => {
   }
   return t('personalCenter.security.telegramDisplayFallback')
 })
+
+const openTelegramMiniAppEntry = () => {
+  if (telegramMiniAppEntryLink.value === '') return
+  openTelegramCompatibleLink(telegramMiniAppEntryLink.value)
+}
 
 const startCooldown = (kind: 'old' | 'new') => {
   if (kind === 'old') {
@@ -490,7 +546,7 @@ const clearTelegramWidget = () => {
 }
 
 const renderTelegramWidget = () => {
-  if (!telegramEnabled.value || telegramBound.value || !telegramWidgetRef.value) {
+  if (!showTelegramWidget.value || !telegramWidgetRef.value) {
     clearTelegramWidget()
     return
   }
@@ -535,6 +591,31 @@ const handleTelegramBind = async (raw: any) => {
     message: t('personalCenter.security.telegramBindSuccess'),
   }
   renderTelegramWidget()
+}
+
+const handleTelegramMiniAppBind = async () => {
+  securityAlert.value = null
+  if (miniAppInitData.value === '') {
+    securityAlert.value = {
+      level: 'warning',
+      message: t('personalCenter.security.telegramMiniAppInitDataMissing'),
+    }
+    return
+  }
+
+  const ok = await userProfileStore.bindTelegramMiniApp(miniAppInitData.value)
+  if (!ok) {
+    securityAlert.value = {
+      level: 'error',
+      message: userProfileStore.securityError || t('personalCenter.security.telegramBindFailed'),
+    }
+    return
+  }
+
+  securityAlert.value = {
+    level: 'success',
+    message: t('personalCenter.security.telegramBindSuccess'),
+  }
 }
 
 const handleUnbindTelegram = async () => {
@@ -602,7 +683,7 @@ onUnmounted(() => {
   }
 })
 
-watch([telegramEnabled, telegramBotUsername, telegramBound], () => {
+watch([showTelegramWidget, telegramBotUsername], () => {
   renderTelegramWidget()
 })
 </script>

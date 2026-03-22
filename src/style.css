@@ -59,6 +59,21 @@
   --ui-duration-fast: 150ms;
   --ui-duration-normal: 250ms;
   --ui-duration-slow: 400ms;
+  --tg-viewport-height: 100vh;
+  --tg-viewport-stable-height: 100vh;
+  --tg-theme-bg-color: var(--ui-bg-page);
+  --tg-theme-secondary-bg-color: var(--ui-bg-elevated);
+  --tg-theme-text-color: var(--ui-text-primary);
+  --tg-theme-hint-color: var(--ui-text-muted);
+  --tg-theme-link-color: var(--ui-accent);
+  --tg-theme-button-color: var(--ui-accent);
+  --tg-theme-button-text-color: var(--ui-text-on-accent);
+  --tg-theme-header-bg-color: var(--ui-bg-elevated);
+  --tg-theme-accent-text-color: var(--ui-accent);
+  --tg-theme-section-bg-color: var(--ui-bg-soft);
+  --tg-theme-section-header-text-color: var(--ui-text-primary);
+  --tg-theme-subtitle-text-color: var(--ui-text-secondary);
+  --tg-theme-destructive-text-color: var(--ui-danger);
 
   /* Easing functions */
   --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -119,6 +134,11 @@ html,
 body {
   background-color: var(--ui-bg-page);
   color: var(--ui-text-primary);
+}
+
+html[data-telegram-mini-app="true"],
+html[data-telegram-mini-app="true"] body {
+  min-height: var(--tg-viewport-stable-height);
 }
 
 @layer base {
@@ -789,12 +809,12 @@ body {
   /* Auth page background */
   .theme-auth-page {
     background: radial-gradient(ellipse at 50% 0%, var(--ui-accent-soft) 0%, var(--ui-bg-page) 70%);
-    min-height: 100vh;
+    min-height: var(--tg-viewport-stable-height);
   }
 
   /* Safe area bottom padding for fixed elements */
   .theme-safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
   }
 }
 

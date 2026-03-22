@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserAuthStore } from '../stores/userAuth'
 import { useAppStore } from '../stores/app'
+import { useTelegramMiniAppStore } from '../stores/telegramMiniApp'
 import { captureAffiliateFromRoute } from '../utils/affiliate'
 
 const router = createRouter({
@@ -208,7 +209,15 @@ router.beforeEach(async (to, _from, next) => {
 // Update SEO on route change
 router.afterEach(() => {
     const appStore = useAppStore()
+    const telegramMiniAppStore = useTelegramMiniAppStore()
     appStore.applySEO()
+    telegramMiniAppStore.syncRouteBackButton(router.currentRoute.value.path, () => {
+        if (window.history.length > 1) {
+            router.back()
+            return
+        }
+        void router.push('/')
+    })
 })
 
 export default router

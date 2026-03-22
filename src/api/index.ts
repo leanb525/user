@@ -151,7 +151,7 @@ userApi.interceptors.request.use(
 const isAuthEndpoint = (url?: string) => {
     if (!url) return false
     const path = url.replace(/^https?:\/\/[^/]+/, '')
-    return /\/auth\/(login|register|telegram\/login|forgot-password)/.test(path)
+    return /\/auth\/(login|register|telegram\/login|telegram\/miniapp\/login|forgot-password)/.test(path)
 }
 
 userApi.interceptors.response.use(
@@ -299,6 +299,10 @@ export interface TelegramAuthPayload {
     photo_url?: string
     auth_date: number
     hash: string
+}
+
+export interface TelegramMiniAppAuthPayload {
+    init_data: string
 }
 
 export interface TelegramBindingData {
@@ -522,6 +526,8 @@ export const userProfileAPI = {
     changePassword: (data: ChangeUserPasswordPayload) => userApi.put<ApiResponse<{ updated: boolean }>>('/me/password', data),
     getTelegramBinding: () => userApi.get<ApiResponse<TelegramBindingData>>('/me/telegram'),
     bindTelegram: (data: TelegramAuthPayload) => userApi.post<ApiResponse<TelegramBindingData>>('/me/telegram/bind', data),
+    bindTelegramMiniApp: (data: TelegramMiniAppAuthPayload) =>
+        userApi.post<ApiResponse<TelegramBindingData>>('/me/telegram/miniapp/bind', data),
     unbindTelegram: () => userApi.delete<ApiResponse<{ unbound: boolean }>>('/me/telegram/unbind'),
 }
 
@@ -530,6 +536,8 @@ export const userAuthAPI = {
     register: (data: any) => userApi.post<ApiResponse>('/auth/register', data),
     login: (data: any) => userApi.post<ApiResponse>('/auth/login', data),
     telegramLogin: (data: TelegramAuthPayload) => userApi.post<ApiResponse>('/auth/telegram/login', data),
+    telegramMiniAppLogin: (data: TelegramMiniAppAuthPayload) =>
+        userApi.post<ApiResponse>('/auth/telegram/miniapp/login', data),
     forgotPassword: (data: any) => userApi.post<ApiResponse>('/auth/forgot-password', data),
 }
 

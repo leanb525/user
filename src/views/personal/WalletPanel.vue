@@ -122,15 +122,14 @@
           <div class="text-xs theme-text-muted">{{ t('personalCenter.wallet.paymentChannelLabel') }}</div>
           <div class="mt-1 text-sm font-semibold theme-text-primary">{{ currentChannelName }}</div>
           <div class="mt-4 flex flex-wrap items-center gap-3">
-            <a
+            <button
               v-if="payLink"
-              :href="payLink"
-              target="_blank"
-              rel="noopener"
+              type="button"
+              @click="handleOpenRechargePayLink"
               class="inline-flex items-center rounded-lg border theme-btn-secondary px-3 py-1.5 text-xs font-semibold"
             >
               {{ t('payment.openPayLink') }}
-            </a>
+            </button>
             <button
               type="button"
               class="inline-flex items-center rounded-lg border theme-btn-secondary px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
@@ -142,6 +141,9 @@
           </div>
           <div v-if="payLink" class="mt-3 text-xs theme-text-muted break-all">
             {{ t('payment.payLinkLabel') }}：{{ payLink }}
+          </div>
+          <div v-if="showTelegramPayHint" class="mt-3 text-xs theme-text-muted">
+            {{ t('payment.telegramExternalHint') }}
           </div>
         </div>
       </div>
@@ -226,12 +228,14 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { walletAPI } from '../../api'
 import { useAppStore } from '../../stores/app'
+import { useTelegramMiniAppStore } from '../../stores/telegramMiniApp'
 import { pageAlertClass, type PageAlert } from '../../utils/alerts'
 import { amountToCents } from '../../utils/money'
 import QRCode from 'qrcode'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const telegramMiniAppStore = useTelegramMiniAppStore()
 
 const loading = ref(true)
 const recharging = ref(false)
@@ -285,6 +289,8 @@ const formatMoney = (amount?: string, currency?: string) => {
 const balanceDisplay = computed(() => formatMoney(wallet.value?.balance, String(appStore.config?.currency || 'CNY')))
 const payLink = computed(() => String(currentRechargePayment.value?.pay_url || '').trim())
 const interactionMode = computed(() => String(currentRechargePayment.value?.interaction_mode || '').toLowerCase())
+const isTelegramMiniApp = computed(() => telegramMiniAppStore.isMiniApp && telegramMiniAppStore.isReady)
+const showTelegramPayHint = computed(() => isTelegramMiniApp.value && Boolean(payLink.value))
 const qrCodeContent = computed(() => String(currentRechargePayment.value?.qr_code || '').trim())
 const qrFallbackContent = computed(() => {
   if (interactionMode.value === 'redirect') return ''
@@ -447,6 +453,20 @@ const initialize = async () => {
   }
 }
 
+const openRechargePayLink = () => {
+  if (!payLink.value) return
+  if (isTelegramMiniApp.value) {
+    telegramMiniAppStore.openLink(payLink.value)
+    return
+  }
+  window.open(payLink.value, '_blank', 'noopener')
+}
+
+const handleOpenRechargePayLink = () => {
+  walletAlert.value = null
+  openRechargePayLink()
+}
+
 const handleRecharge = async () => {
   walletAlert.value = null
   const amount = rechargeForm.amount.trim()
@@ -491,7 +511,7 @@ const handleRecharge = async () => {
       ])
     }
     if (payLink.value && String(currentRechargePayment.value?.interaction_mode || '').toLowerCase() === 'redirect') {
-      window.open(payLink.value, '_blank', 'noopener')
+      openRechargePayLink()
     }
   } catch (err: any) {
     walletAlert.value = {
