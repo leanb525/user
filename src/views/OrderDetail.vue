@@ -163,11 +163,11 @@
                       {{ tag }}
                     </span>
                   </div>
-                  <div v-if="manualSubmissionRows(item.manual_form_submission).length"
+                  <div v-if="manualSubmissionRows(item.manual_form_submission, item.manual_form_schema_snapshot).length"
                     class="mt-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600 dark:border-white/10 dark:bg-black/30 dark:text-gray-300">
                     <div class="mb-2 font-semibold theme-text-secondary">{{ t('orderDetail.manualSubmissionTitle') }}</div>
-                    <div v-for="row in manualSubmissionRows(item.manual_form_submission)" :key="`${item.id}-${row.key}`" class="mb-1 last:mb-0">
-                      <span class="theme-text-primary">{{ row.key }}</span>：{{ row.value }}
+                    <div v-for="row in manualSubmissionRows(item.manual_form_submission, item.manual_form_schema_snapshot)" :key="`${item.id}-${row.key}`" class="mb-1 last:mb-0">
+                      <span class="theme-text-primary">{{ row.label }}</span>：{{ row.value }}
                     </div>
                   </div>
                 </div>
@@ -250,11 +250,11 @@
                             {{ tag }}
                           </span>
                         </div>
-                        <div v-if="manualSubmissionRows(item.manual_form_submission).length"
+                        <div v-if="manualSubmissionRows(item.manual_form_submission, item.manual_form_schema_snapshot).length"
                           class="mt-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600 dark:border-white/10 dark:bg-black/30 dark:text-gray-300">
                           <div class="mb-2 font-semibold theme-text-secondary">{{ t('orderDetail.manualSubmissionTitle') }}</div>
-                          <div v-for="row in manualSubmissionRows(item.manual_form_submission)" :key="`${item.id}-${row.key}`" class="mb-1 last:mb-0">
-                            <span class="theme-text-primary">{{ row.key }}</span>：{{ row.value }}
+                          <div v-for="row in manualSubmissionRows(item.manual_form_submission, item.manual_form_schema_snapshot)" :key="`${item.id}-${row.key}`" class="mb-1 last:mb-0">
+                            <span class="theme-text-primary">{{ row.label }}</span>：{{ row.value }}
                           </div>
                         </div>
                       </div>
@@ -535,14 +535,62 @@ const formatManualValue = (value: unknown) => {
   return String(value)
 }
 
-const manualSubmissionRows = (submission: any) => {
+interface ManualFormSnapshotField {
+  key: string
+  label?: Record<string, string> | string
+}
+
+const normalizeManualSnapshotFields = (schemaSnapshot: any): ManualFormSnapshotField[] => {
+  if (!schemaSnapshot || typeof schemaSnapshot !== 'object') return []
+  const rawFields = Array.isArray(schemaSnapshot.fields) ? schemaSnapshot.fields : []
+  return rawFields
+    .map((field: any) => {
+      const key = String(field?.key || '').trim()
+      if (!key) return null
+      return {
+        key,
+        label: field?.label,
+      } as ManualFormSnapshotField
+    })
+    .filter(Boolean) as ManualFormSnapshotField[]
+}
+
+const resolveManualFieldLabel = (field: ManualFormSnapshotField) => {
+  if (typeof field.label === 'string' && field.label.trim()) return field.label.trim()
+  if (field.label && typeof field.label === 'object') {
+    const localized = getLocalizedText(field.label)
+    if (localized) return localized
+  }
+  return field.key
+}
+
+const manualSubmissionRows = (submission: any, schemaSnapshot?: any) => {
   if (!submission || typeof submission !== 'object') return []
-  return Object.entries(submission)
-    .filter(([key]) => String(key).trim() !== '')
-    .map(([key, value]) => ({
-      key: String(key),
+  const entries = Object.entries(submission).filter(([key]) => String(key).trim() !== '')
+  if (entries.length === 0) return []
+
+  const valueMap = new Map(entries.map(([key, value]) => [String(key), value] as const))
+  const rows: Array<{ key: string; label: string; value: string }> = []
+
+  normalizeManualSnapshotFields(schemaSnapshot).forEach((field) => {
+    if (!valueMap.has(field.key)) return
+    rows.push({
+      key: field.key,
+      label: resolveManualFieldLabel(field),
+      value: formatManualValue(valueMap.get(field.key)),
+    })
+    valueMap.delete(field.key)
+  })
+
+  valueMap.forEach((value, key) => {
+    rows.push({
+      key,
+      label: key,
       value: formatManualValue(value),
-    }))
+    })
+  })
+
+  return rows
 }
 
 const orderItemSkuText = (item: any) => {
