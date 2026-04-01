@@ -13,6 +13,7 @@ export const walletAPI = {
     account: () => userApi.get<ApiResponse<WalletAccountData>>('/wallet'),
     transactions: (params?: any) => userApi.get<ApiResponse<WalletTransactionData[]>>('/wallet/transactions', { params }),
     recharge: (data: WalletRechargePayload) => userApi.post<ApiResponse<WalletRechargeResult>>('/wallet/recharge', data),
+    rechargeOrders: (params?: any) => userApi.get<ApiResponse<any[]>>('/wallet/recharges', { params }),
     rechargeDetail: (rechargeNo: string) =>
         userApi.get<ApiResponse<WalletRechargeResult>>(`/wallet/recharges/${encodeURIComponent(rechargeNo)}`),
     captureRechargePayment: (paymentID: number) =>

@@ -25,84 +25,6 @@
       @submit="handleRecharge"
     />
 
-    <div v-if="currentRecharge && currentRechargePayment" class="theme-personal-card">
-      <h3 class="text-lg font-bold theme-text-primary">{{ t('personalCenter.wallet.paymentInfoTitle') }}</h3>
-      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 text-sm">
-        <div class="rounded-xl border theme-surface-soft p-4">
-          <div class="text-xs theme-text-muted">{{ t('personalCenter.wallet.rechargeNoLabel') }}</div>
-          <div class="mt-1 font-mono theme-text-primary">{{ currentRecharge.recharge_no }}</div>
-        </div>
-        <div class="rounded-xl border theme-surface-soft p-4">
-          <div class="text-xs theme-text-muted">{{ t('personalCenter.wallet.paymentStatusLabel') }}</div>
-          <div class="mt-1">
-            <span class="theme-badge px-2.5 py-1 text-xs font-semibold" :class="rechargeStatusClass(currentRecharge.status)">
-              {{ rechargeStatusLabel(currentRecharge.status) }}
-            </span>
-          </div>
-        </div>
-        <div class="rounded-xl border theme-surface-soft p-4">
-          <div class="text-xs theme-text-muted">{{ t('personalCenter.wallet.payAmountLabel') }}</div>
-          <div class="mt-1 font-mono theme-text-primary">{{ formatMoney(currentRecharge.payable_amount, currentRecharge.currency) }}</div>
-        </div>
-      </div>
-      <div v-if="isRechargePending" class="mt-3 text-xs theme-text-muted">
-        {{ t('personalCenter.wallet.pendingHint') }}
-      </div>
-      <div class="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div v-if="showQRCode" class="rounded-xl border theme-surface-soft p-4">
-          <div class="mb-3 text-sm font-semibold theme-text-primary">{{ t('payment.qrTitle') }}</div>
-          <div class="flex items-center justify-center">
-            <img :src="qrImageUrl" alt="Recharge QR" class="h-52 w-52 object-contain" />
-          </div>
-          <div v-if="qrUsingPayLinkFallback" class="mt-3 text-xs theme-text-muted">
-            {{ t('payment.qrFallbackHint') }}
-          </div>
-        </div>
-        <div class="rounded-xl border theme-surface-soft p-4">
-          <div class="text-xs theme-text-muted">{{ t('personalCenter.wallet.paymentChannelLabel') }}</div>
-          <div class="mt-1 text-sm font-semibold theme-text-primary">{{ currentChannelName }}</div>
-          <div class="mt-4 space-y-2 text-xs">
-            <div class="flex items-center justify-between gap-4">
-              <span class="theme-text-muted">{{ t('payment.feeRateLabel') }}</span>
-              <span class="font-medium theme-text-primary">{{ currentRechargeFeeRateDisplay }}</span>
-            </div>
-            <div class="flex items-center justify-between gap-4">
-              <span class="theme-text-muted">{{ t('payment.fixedFeeLabel') }}</span>
-              <span class="font-medium theme-text-primary">{{ currentRechargeFixedFeeDisplay }}</span>
-            </div>
-            <div class="flex items-center justify-between gap-4">
-              <span class="theme-text-muted">{{ t('payment.feeAmountLabel') }}</span>
-              <span class="font-medium theme-text-primary">{{ currentRechargeFeeAmountDisplay }}</span>
-            </div>
-          </div>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              v-if="payLink"
-              type="button"
-              @click="handleOpenRechargePayLink"
-              class="inline-flex items-center rounded-lg border theme-btn-secondary px-3 py-1.5 text-xs font-semibold"
-            >
-              {{ t('payment.openPayLink') }}
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center rounded-lg border theme-btn-secondary px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="checkingPayment"
-              @click="checkRechargePayment"
-            >
-              {{ checkingPayment ? t('personalCenter.wallet.checkingPayStatus') : t('personalCenter.wallet.checkPayStatus') }}
-            </button>
-          </div>
-          <div v-if="payLink" class="mt-3 text-xs theme-text-muted break-all">
-            {{ t('payment.payLinkLabel') }}：{{ payLink }}
-          </div>
-          <div v-if="showTelegramPayHint" class="mt-3 text-xs theme-text-muted">
-            {{ t('payment.telegramExternalHint') }}
-          </div>
-        </div>
-      </div>
-    </div>
-
     <WalletTransactionList
       :loading="loading"
       :transactions="transactions"
@@ -115,15 +37,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { walletAPI } from '../../api'
 import { useAppStore } from '../../stores/app'
-import { useTelegramMiniAppStore } from '../../stores/telegramMiniApp'
 import type { PageAlert } from '../../utils/alerts'
 import { amountToCents, basisPointsToPercent, calculateFeeCents, centsToAmount, rateToBasisPoints } from '../../utils/money'
-import QRCode from 'qrcode'
 import WalletBalanceCard from '../../components/wallet/WalletBalanceCard.vue'
 import WalletRechargeForm from '../../components/wallet/WalletRechargeForm.vue'
 import WalletTransactionList from '../../components/wallet/WalletTransactionList.vue'
@@ -132,11 +52,9 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
-const telegramMiniAppStore = useTelegramMiniAppStore()
 
 const loading = ref(true)
 const recharging = ref(false)
-const checkingPayment = ref(false)
 const wallet = ref<any>(null)
 const transactions = ref<any[]>([])
 const pagination = ref({
@@ -146,65 +64,11 @@ const pagination = ref({
   total_page: 1,
 })
 const walletAlert = ref<PageAlert | null>(null)
-const pollTimer = ref<number | null>(null)
-const restoringRecharge = ref(false)
 
 const rechargeForm = reactive({
   amount: '',
   channelId: 0,
   remark: '',
-})
-
-const currentRecharge = ref<any>(null)
-const currentRechargePayment = ref<any>(null)
-const rechargeReturnMarkers = ['epay_return', 'alipay_return', 'wechat_return', 'epusdt_return', 'tokenpay_return', 'okpay_return', 'pp_return', 'stripe_return']
-
-const routeQueryValueToString = (value: unknown): string => {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const text = String(item ?? '').trim()
-      if (text !== '') return text
-    }
-    return ''
-  }
-  return String(value ?? '').trim()
-}
-
-const readRouteQueryValue = (key: string): string => {
-  const normalizedKey = String(key || '').trim().toLowerCase()
-  if (normalizedKey === '') return ''
-
-  const query = route.query as Record<string, unknown>
-  const candidates = [key, normalizedKey, `amp;${key}`, `amp;${normalizedKey}`]
-  for (const candidate of candidates) {
-    const value = routeQueryValueToString(query[candidate])
-    if (value !== '') return value
-  }
-
-  for (const [rawKey, rawValue] of Object.entries(query)) {
-    const cleanedKey = String(rawKey || '').trim().toLowerCase().replace(/^(amp;)+/, '')
-    if (cleanedKey !== normalizedKey) continue
-    const value = routeQueryValueToString(rawValue)
-    if (value !== '') return value
-  }
-  return ''
-}
-
-const rechargeNoFromRoute = computed(() => {
-  const rechargeNo = readRouteQueryValue('recharge_no')
-  if (rechargeNo !== '') return rechargeNo
-  const orderNo = readRouteQueryValue('order_no')
-  if (/^WR/i.test(orderNo)) return orderNo
-  return ''
-})
-const hasRechargeReturnMarker = computed(() => {
-  if (rechargeReturnMarkers.some((marker) => readRouteQueryValue(marker).toLowerCase() === '1')) {
-    return true
-  }
-  if (readRouteQueryValue('token') !== '') return true
-  if (readRouteQueryValue('payer_id') !== '' || readRouteQueryValue('PayerID') !== '') return true
-  if (readRouteQueryValue('session_id') !== '') return true
-  return false
 })
 
 const channels = computed(() => {
@@ -218,7 +82,6 @@ const channels = computed(() => {
     }
     return true
   })
-  // 按钱包充值允许的支付渠道过滤
   const allowedIds = appStore.config?.wallet_recharge_channel_ids
   if (Array.isArray(allowedIds) && allowedIds.length > 0) {
     const allowedSet = new Set(allowedIds.map(Number))
@@ -262,92 +125,6 @@ const selectedChannelFeeAmountDisplay = computed(() => {
 })
 
 const balanceDisplay = computed(() => formatMoney(wallet.value?.balance, String(appStore.config?.currency || 'CNY')))
-const payLink = computed(() => String(currentRechargePayment.value?.pay_url || '').trim())
-const interactionMode = computed(() => String(currentRechargePayment.value?.interaction_mode || '').toLowerCase())
-const isTelegramMiniApp = computed(() => telegramMiniAppStore.isMiniApp && telegramMiniAppStore.isReady)
-const showTelegramPayHint = computed(() => isTelegramMiniApp.value && Boolean(payLink.value))
-const qrCodeContent = computed(() => String(currentRechargePayment.value?.qr_code || '').trim())
-const qrFallbackContent = computed(() => {
-  if (interactionMode.value === 'redirect') return ''
-  if (qrCodeContent.value) return ''
-  return payLink.value
-})
-const qrDisplayContent = computed(() => qrCodeContent.value || qrFallbackContent.value)
-const qrUsingPayLinkFallback = computed(() => Boolean(!qrCodeContent.value && qrFallbackContent.value))
-const showQRCode = computed(() => interactionMode.value !== 'redirect' && Boolean(qrImageUrl.value))
-const qrImageUrl = ref('')
-const qrRenderVersion = ref(0)
-
-const renderQRCodeImage = async () => {
-  const qr = qrDisplayContent.value
-  const currentVersion = qrRenderVersion.value + 1
-  qrRenderVersion.value = currentVersion
-  if (!qr) {
-    qrImageUrl.value = ''
-    return
-  }
-  if (qr.startsWith('data:image/')) {
-    qrImageUrl.value = qr
-    return
-  }
-  const isImageURL = /^https?:\/\/.+\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(qr)
-  if (isImageURL) {
-    qrImageUrl.value = qr
-    return
-  }
-  try {
-    const dataURL = await QRCode.toDataURL(qr, {
-      width: 240,
-      margin: 1,
-      errorCorrectionLevel: 'M',
-    })
-    if (currentVersion !== qrRenderVersion.value) return
-    qrImageUrl.value = dataURL
-  } catch {
-    if (currentVersion !== qrRenderVersion.value) return
-    qrImageUrl.value = ''
-  }
-}
-const isRechargePending = computed(() => {
-  const status = String(currentRecharge.value?.status || '').toLowerCase()
-  return status === 'pending' || status === 'initiated'
-})
-
-const currentChannelName = computed(() => {
-  const channelID = Number(currentRecharge.value?.channel_id || currentRechargePayment.value?.channel_id || 0)
-  if (!Number.isFinite(channelID) || channelID <= 0) return '-'
-  const channel = channels.value.find((item: any) => item.id === channelID)
-  if (channel) return channel.name
-  return String(currentRechargePayment.value?.channel_type || '-')
-})
-const currentRechargeFeeRateDisplay = computed(() => {
-  const rate = rateToBasisPoints(currentRecharge.value?.fee_rate ?? currentRechargePayment.value?.fee_rate)
-  if (rate === null) return '0.00%'
-  return `${basisPointsToPercent(rate)}%`
-})
-const currentRechargeFixedFeeDisplay = computed(() => {
-  const fixedFee = currentRechargePayment.value?.fixed_fee ?? '0.00'
-  return formatMoney(String(fixedFee), String(currentRecharge.value?.currency || currentRechargePayment.value?.currency || selectedChannelCurrency.value))
-})
-const currentRechargeFeeAmountDisplay = computed(() => {
-  const feeAmount = currentRecharge.value?.fee_amount ?? currentRechargePayment.value?.fee_amount ?? '0.00'
-  return formatMoney(String(feeAmount), String(currentRecharge.value?.currency || currentRechargePayment.value?.currency || selectedChannelCurrency.value))
-})
-
-const rechargeStatusLabel = (status?: string) => {
-  const normalized = String(status || '').toLowerCase()
-  const key = `personalCenter.wallet.rechargeStatus.${normalized}`
-  const translated = t(key)
-  if (translated === key) return normalized || '-'
-  return translated
-}
-
-const rechargeStatusClass = (status?: string) => {
-  const normalized = String(status || '').toLowerCase()
-  if (normalized === 'success') return 'theme-badge-success'
-  if (normalized === 'failed' || normalized === 'expired') return 'theme-badge-danger'
-  return 'theme-badge-warning'
-}
 
 const loadWallet = async () => {
   const response = await walletAPI.account()
@@ -368,119 +145,6 @@ const loadTransactions = async (page = 1) => {
   } finally {
     loading.value = false
   }
-}
-
-const stopPolling = () => {
-  if (!pollTimer.value) return
-  window.clearInterval(pollTimer.value)
-  pollTimer.value = null
-}
-
-const startPolling = () => {
-  if (!isRechargePending.value || pollTimer.value) return
-  pollTimer.value = window.setInterval(() => {
-    void refreshRechargeStatus(true)
-  }, 5000)
-}
-
-const syncRechargePayload = (payload: any) => {
-  currentRecharge.value = payload?.recharge || currentRecharge.value
-  currentRechargePayment.value = payload?.payment || currentRechargePayment.value
-  if (payload?.account) {
-    wallet.value = payload.account
-  }
-}
-
-const buildRechargeRouteQuery = () => {
-  const query: Record<string, string> = {}
-  const rechargeNo = String(rechargeNoFromRoute.value || currentRecharge.value?.recharge_no || '').trim()
-  if (rechargeNo !== '') {
-    query.recharge_no = rechargeNo
-  }
-  return query
-}
-
-const shouldCaptureRechargeReturn = () => {
-  const providerType = String(currentRechargePayment.value?.provider_type || '').toLowerCase()
-  const channelType = String(currentRechargePayment.value?.channel_type || '').toLowerCase()
-  if (providerType === 'official' && channelType === 'paypal') {
-    return readRouteQueryValue('pp_return').toLowerCase() === '1'
-      || readRouteQueryValue('token') !== ''
-      || readRouteQueryValue('payer_id') !== ''
-      || readRouteQueryValue('PayerID') !== ''
-  }
-  if (providerType === 'official' && channelType === 'stripe') {
-    return readRouteQueryValue('stripe_return').toLowerCase() === '1'
-      || readRouteQueryValue('session_id') !== ''
-  }
-  return false
-}
-
-const restoreRechargeFromRoute = async () => {
-  const rechargeNo = String(rechargeNoFromRoute.value || '').trim()
-  if (rechargeNo === '' || restoringRecharge.value) return
-
-  restoringRecharge.value = true
-  try {
-    const response = await walletAPI.rechargeDetail(rechargeNo)
-    const payload = response.data.data || {}
-    syncRechargePayload(payload)
-
-    if (shouldCaptureRechargeReturn()) {
-      await checkRechargePayment()
-    } else if (hasRechargeReturnMarker.value) {
-      await refreshRechargeStatus(true)
-    } else if (isRechargePending.value) {
-      startPolling()
-    }
-
-    if (hasRechargeReturnMarker.value) {
-      await router.replace({
-        path: route.path,
-        query: buildRechargeRouteQuery(),
-      })
-    }
-  } catch (err: any) {
-    walletAlert.value = {
-      level: 'error',
-      message: err?.message || t('personalCenter.wallet.errors.rechargeQueryFailed'),
-    }
-  } finally {
-    restoringRecharge.value = false
-  }
-}
-
-const initialize = async () => {
-  walletAlert.value = null
-  try {
-    if (!appStore.config) {
-      await appStore.loadConfig()
-    }
-    await Promise.all([
-      loadWallet(),
-      loadTransactions(),
-    ])
-    await restoreRechargeFromRoute()
-  } catch (err: any) {
-    walletAlert.value = {
-      level: 'error',
-      message: err?.message || t('personalCenter.wallet.errors.loadFailed'),
-    }
-  }
-}
-
-const openRechargePayLink = () => {
-  if (!payLink.value) return
-  if (isTelegramMiniApp.value) {
-    telegramMiniAppStore.openLink(payLink.value)
-    return
-  }
-  window.open(payLink.value, '_blank', 'noopener')
-}
-
-const handleOpenRechargePayLink = () => {
-  walletAlert.value = null
-  openRechargePayLink()
 }
 
 const handleRecharge = async () => {
@@ -510,24 +174,16 @@ const handleRecharge = async () => {
       remark: rechargeForm.remark.trim() || undefined,
     })
     const payload = response.data.data || {}
-    syncRechargePayload(payload)
+    const rechargeNo = payload?.recharge?.recharge_no || payload?.recharge_no || ''
     rechargeForm.amount = ''
     rechargeForm.remark = ''
-    walletAlert.value = {
-      level: 'success',
-      message: t('personalCenter.wallet.createPaymentSuccess'),
-    }
-    if (isRechargePending.value) {
-      startPolling()
+    if (rechargeNo) {
+      router.push(`/recharge-orders/${encodeURIComponent(rechargeNo)}`)
     } else {
-      stopPolling()
-      await Promise.all([
-        loadWallet(),
-        loadTransactions(1),
-      ])
-    }
-    if (payLink.value && String(currentRechargePayment.value?.interaction_mode || '').toLowerCase() === 'redirect') {
-      openRechargePayLink()
+      walletAlert.value = {
+        level: 'success',
+        message: t('personalCenter.wallet.createPaymentSuccess'),
+      }
     }
   } catch (err: any) {
     walletAlert.value = {
@@ -536,65 +192,6 @@ const handleRecharge = async () => {
     }
   } finally {
     recharging.value = false
-  }
-}
-
-const refreshRechargeStatus = async (silent = false) => {
-  const rechargeNo = String(currentRecharge.value?.recharge_no || '').trim()
-  if (!rechargeNo) return
-  try {
-    const response = await walletAPI.rechargeDetail(rechargeNo)
-    const payload = response.data.data || {}
-    syncRechargePayload(payload)
-
-    const status = String(currentRecharge.value?.status || '').toLowerCase()
-    if (status === 'success') {
-      stopPolling()
-      await Promise.all([
-        loadWallet(),
-        loadTransactions(1),
-      ])
-      walletAlert.value = {
-        level: 'success',
-        message: t('personalCenter.wallet.rechargeSuccess'),
-      }
-      return
-    }
-    if (status === 'failed' || status === 'expired') {
-      stopPolling()
-      walletAlert.value = {
-        level: 'warning',
-        message: t('personalCenter.wallet.errors.rechargeStateFailed'),
-      }
-      return
-    }
-    startPolling()
-  } catch (err: any) {
-    if (!silent) {
-      walletAlert.value = {
-        level: 'error',
-        message: err?.message || t('personalCenter.wallet.errors.rechargeQueryFailed'),
-      }
-    }
-  }
-}
-
-const checkRechargePayment = async () => {
-  const paymentID = Number(currentRechargePayment.value?.id || 0)
-  if (!Number.isFinite(paymentID) || paymentID <= 0) return
-  checkingPayment.value = true
-  try {
-    const response = await walletAPI.captureRechargePayment(paymentID)
-    const payload = response.data.data || {}
-    syncRechargePayload(payload)
-    await refreshRechargeStatus(true)
-  } catch (err: any) {
-    walletAlert.value = {
-      level: 'error',
-      message: err?.message || t('personalCenter.wallet.errors.checkPayStatusFailed'),
-    }
-  } finally {
-    checkingPayment.value = false
   }
 }
 
@@ -608,6 +205,36 @@ const refreshCurrentPage = async () => {
     loadWallet(),
     loadTransactions(pagination.value.page),
   ])
+}
+
+// 支付网关回调可能带 recharge_no 回到 /me/wallet，重定向到充值详情页
+const redirectRechargeReturn = () => {
+  const query = route.query as Record<string, unknown>
+  const rechargeNo = String(query.recharge_no || '').trim()
+  const orderNo = String(query.order_no || '').trim()
+  const targetNo = rechargeNo || (/^WR/i.test(orderNo) ? orderNo : '')
+  if (targetNo) {
+    router.replace(`/recharge-orders/${encodeURIComponent(targetNo)}${window.location.search}`)
+  }
+}
+
+const initialize = async () => {
+  walletAlert.value = null
+  try {
+    if (!appStore.config) {
+      await appStore.loadConfig()
+    }
+    await Promise.all([
+      loadWallet(),
+      loadTransactions(),
+    ])
+    redirectRechargeReturn()
+  } catch (err: any) {
+    walletAlert.value = {
+      level: 'error',
+      message: err?.message || t('personalCenter.wallet.errors.loadFailed'),
+    }
+  }
 }
 
 watch(
@@ -629,27 +256,7 @@ watch(
   { immediate: true }
 )
 
-watch(
-  () => qrDisplayContent.value,
-  () => {
-    void renderQRCodeImage()
-  },
-  { immediate: true }
-)
-
-watch(
-  () => route.fullPath,
-  () => {
-    if (!rechargeNoFromRoute.value) return
-    void restoreRechargeFromRoute()
-  }
-)
-
 onMounted(() => {
   void initialize()
-})
-
-onUnmounted(() => {
-  stopPolling()
 })
 </script>
