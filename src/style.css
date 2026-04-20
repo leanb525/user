@@ -1096,6 +1096,11 @@ html[data-telegram-mini-app="true"] body {
   }
 }
 
+/* Narrow global content container (override Tailwind's responsive .container max-widths) */
+.container {
+  max-width: 64rem !important;
+}
+
 /* Unlayered: override Tailwind Typography prose img margins for consecutive images */
 .theme-prose img:has(+ img),
 .theme-prose p:has(> img):has(+ p > img),
