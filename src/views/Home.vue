@@ -316,7 +316,7 @@
     </section>
 
     <template v-if="latestSectionVisible">
-    <hr class="theme-section-divider mx-4 md:mx-auto md:max-w-5xl" />
+    <hr class="theme-section-divider mx-4 md:mx-auto md:max-w-6xl" />
 
     <section class="relative z-10 py-12">
       <div class="container mx-auto px-4">
