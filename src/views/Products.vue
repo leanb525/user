@@ -27,7 +27,7 @@
         <!-- Main Content - Products Grid -->
         <main class="flex-1">
           <!-- Loading Skeleton -->
-          <div v-if="loading" class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div v-if="loading" class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
             <div v-for="i in 6" :key="i"
               class="theme-panel rounded-2xl border overflow-hidden flex flex-col">
               <div class="h-36 md:h-56 theme-skeleton"></div>
@@ -50,7 +50,7 @@
 
           <!-- Products Grid -->
           <div v-else-if="products.length > 0">
-            <div class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3">
               <ProductCard
                 v-for="(product, idx) in products"
                 :key="product.id"
