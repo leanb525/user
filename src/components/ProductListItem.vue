@@ -72,6 +72,15 @@
           :class="getStockBadgeClass(product.stock_status)">
           {{ getStockStatusLabel(product) }}
         </span>
+
+        <span v-if="hasSoldCount(product)"
+          class="inline-flex items-center gap-0.5 text-[10px] theme-text-muted">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12l-1 13H7L6 7z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a3 3 0 016 0v2" />
+          </svg>
+          {{ t('products.soldCount', { count: getSoldCount(product) }) }}
+        </span>
       </div>
     </div>
 
@@ -144,5 +153,5 @@ defineEmits<{
 
 const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
-const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules } = useProductLabels()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, getSoldCount, hasSoldCount } = useProductLabels()
 </script>

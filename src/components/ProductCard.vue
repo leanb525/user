@@ -38,6 +38,16 @@
           {{ tag }}
         </span>
       </div>
+
+      <!-- Sold count -->
+      <div v-if="hasSoldCount(product)"
+        class="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 inline-flex items-center gap-1 rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] md:text-xs font-medium px-2 md:px-2.5 py-0.5 md:py-1 shadow-sm">
+        <svg class="w-3 h-3 md:w-3.5 md:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12l-1 13H7L6 7z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a3 3 0 016 0v2" />
+        </svg>
+        {{ t('products.soldCount', { count: getSoldCount(product) }) }}
+      </div>
     </div>
 
     <!-- Content Area -->
@@ -175,5 +185,5 @@ defineEmits<{
 
 const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
-const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules } = useProductLabels()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, getSoldCount, hasSoldCount } = useProductLabels()
 </script>

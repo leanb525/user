@@ -14,6 +14,7 @@
     <Loading :loading="appStore.loading" />
     <Toast />
     <ConfirmDialog />
+    <AnnouncementDialog />
     <BackToTop />
     <MobileBottomNav />
   </div>
@@ -26,6 +27,7 @@ import Footer from './components/Footer.vue'
 import Loading from './components/Loading.vue'
 import Toast from './components/Toast.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
+import AnnouncementDialog from './components/AnnouncementDialog.vue'
 import ErrorBoundary from './components/ErrorBoundary.vue'
 import BackToTop from './components/BackToTop.vue'
 import MobileBottomNav from './components/MobileBottomNav.vue'

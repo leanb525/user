@@ -112,6 +112,15 @@ export function useProductLabels() {
   const hasPromotionRules = (product: any) => product?.promotion_rules?.length > 0
   const getPromotionRules = (product: any): any[] => product?.promotion_rules ?? []
 
+  const getSoldCount = (product: any): number => {
+    const raw = product?.total_sold ?? product?.sold_count
+    const value = Number(raw)
+    if (!Number.isFinite(value) || value <= 0) return 0
+    return Math.floor(value)
+  }
+
+  const hasSoldCount = (product: any) => getSoldCount(product) > 0
+
   return {
     getPurchaseTypeLabel,
     getFulfillmentTypeLabel,
@@ -126,5 +135,7 @@ export function useProductLabels() {
     getSkuPromotionSaveAmount,
     hasPromotionRules,
     getPromotionRules,
+    getSoldCount,
+    hasSoldCount,
   }
 }

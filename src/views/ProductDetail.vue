@@ -118,6 +118,17 @@
                   >
                     {{ getStockStatusLabel(product) }}
                   </span>
+
+                  <span
+                    v-if="hasSoldCount(product)"
+                    class="inline-flex items-center gap-1 text-xs theme-text-muted"
+                  >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12l-1 13H7L6 7z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5a3 3 0 016 0v2" />
+                    </svg>
+                    {{ t('products.soldCount', { count: getSoldCount(product) }) }}
+                  </span>
                 </div>
 
                 <div class="mb-8 border-b theme-border pb-8" ref="priceSection">
@@ -421,7 +432,7 @@ const buyNowStore = useBuyNowStore()
 const userAuthStore = useUserAuthStore()
 
 const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
-const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount, hasSkuPromotionPrice, getSkuPromotionPriceAmount, getSkuPromotionSaveAmount, hasPromotionRules, getPromotionRules } = useProductLabels()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeClass, getStockStatusLabel, hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount, hasSkuPromotionPrice, getSkuPromotionPriceAmount, getSkuPromotionSaveAmount, hasPromotionRules, getPromotionRules, getSoldCount, hasSoldCount } = useProductLabels()
 
 const formatPromotionRule = (rule: any) => {
   const amount = formatPrice(rule.min_amount, siteCurrency.value)
