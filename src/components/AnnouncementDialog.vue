@@ -24,7 +24,6 @@
         >
           <div
             v-if="visible && notice"
-            ref="dialogRef"
             role="dialog"
             aria-modal="true"
             class="relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl theme-panel border shadow-2xl overflow-hidden"
@@ -116,7 +115,6 @@ const appStore = useAppStore()
 
 const visible = ref(false)
 const notice = ref<any>(null)
-const dialogRef = ref<HTMLElement | null>(null)
 
 const getLocalizedText = (jsonData: any): string => {
   if (!jsonData) return ''
