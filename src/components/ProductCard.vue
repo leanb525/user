@@ -30,6 +30,14 @@
         {{ t('products.stockStatus.outOfStock') }}
       </div>
 
+      <!-- GPT Inventory Overlay -->
+      <div v-if="gptInventoryAvailable !== null" class="absolute inset-0 z-20 flex items-center justify-center bg-black/55">
+        <span class="px-3 py-1.5 rounded-lg text-sm md:text-base font-bold tracking-wide shadow-lg"
+          :class="gptInventoryAvailable ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'">
+          {{ gptInventoryAvailable ? '有凭证' : '无凭证' }}
+        </span>
+      </div>
+
       <!-- Tags -->
       <div v-if="!isSoldOut(product) && product.tags && product.tags.length > 0"
         class="absolute top-2 right-2 md:top-4 md:right-4 z-20 flex flex-wrap gap-1 md:gap-2 justify-end">
@@ -172,10 +180,12 @@ withDefaults(defineProps<{
   index?: number
   maxTags?: number
   animationStep?: number
+  gptInventoryAvailable?: boolean | null
 }>(), {
   index: 0,
   maxTags: 2,
   animationStep: 50,
+  gptInventoryAvailable: null,
 })
 
 defineEmits<{

@@ -146,6 +146,7 @@
                       :product="product"
                       :index="idx"
                       :animation-step="20"
+                      :gpt-inventory-available="product.id === 23 ? gptInventoryAvailable : null"
                       @click="goToProduct"
                       @quick-buy="openQuickBuy"
                     />
@@ -302,6 +303,7 @@
             :product="product"
             :index="idx"
             :animation-step="60"
+            :gpt-inventory-available="product.id === 23 ? gptInventoryAvailable : null"
             @click="goToProduct"
             @quick-buy="openQuickBuy"
           />
@@ -394,6 +396,19 @@ const products = ref<any[]>([])
 const posts = ref<any[]>([])
 const quickBuyProduct = ref<any>(null)
 const quickBuyVisible = ref(false)
+const gptInventoryAvailable = ref<boolean | null>(null)
+
+const loadGptInventory = async () => {
+  try {
+    const res = await fetch('https://shop.freeymxz.com/cdk-api/api/dashboard/stats?availabilityOnly=true')
+    if (!res.ok) return
+    const json = await res.json()
+    const val = json?.data?.gptInventoryAvailable
+    if (typeof val === 'boolean') gptInventoryAvailable.value = val
+  } catch {
+    // silent
+  }
+}
 
 const openQuickBuy = (product: any) => {
   quickBuyProduct.value = product
@@ -485,9 +500,9 @@ const loadLatestPosts = async () => {
 // ==================== Lifecycle ====================
 onMounted(async () => {
   if (templateMode.value === 'list') {
-    await Promise.all([loadBanners(), listInitialize()])
+    await Promise.all([loadBanners(), listInitialize(), loadGptInventory()])
   } else {
-    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts()])
+    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadGptInventory()])
   }
 })
 
