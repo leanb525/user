@@ -30,12 +30,11 @@
         {{ t('products.stockStatus.outOfStock') }}
       </div>
 
-      <!-- GPT Inventory Overlay -->
-      <div v-if="gptInventoryAvailable !== null" class="absolute inset-0 z-20 flex items-center justify-center bg-black/55">
-        <span class="px-3 py-1.5 rounded-lg text-sm md:text-base font-bold tracking-wide shadow-lg"
-          :class="gptInventoryAvailable ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'">
-          {{ gptInventoryAvailable ? '有凭证' : '无凭证' }}
-        </span>
+      <!-- GPT Inventory Badge -->
+      <div v-if="gptInventoryAvailable !== null"
+        class="absolute left-2 top-2 md:left-3 md:top-3 z-20 px-2 py-1 rounded-md text-xs md:text-sm font-bold shadow-md"
+        :class="gptInventoryAvailable ? 'bg-amber-400 text-gray-900' : 'bg-gray-400 text-gray-900'">
+        {{ gptInventoryAvailable ? '有凭证' : '无凭证' }}
       </div>
 
       <!-- Tags -->
