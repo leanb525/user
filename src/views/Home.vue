@@ -400,11 +400,11 @@ const gptInventoryAvailable = ref<boolean | null>(null)
 
 const loadGptInventory = async () => {
   try {
-    const res = await fetch('https://shop.freeymxz.com/cdk-api/api/dashboard/stats?availabilityOnly=true')
+    const res = await fetch('https://shop.freeymxz.com/cdk-api/api/cards/gpt-inventory')
     if (!res.ok) return
     const json = await res.json()
-    const val = json?.data?.gptInventoryAvailable
-    if (typeof val === 'boolean') gptInventoryAvailable.value = val
+    const empty = json?.data?.empty
+    if (typeof empty === 'boolean') gptInventoryAvailable.value = !empty
   } catch {
     // silent
   }

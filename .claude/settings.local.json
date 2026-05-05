@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx vue-tsc *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "mcp__augment-context-engine__codebase-retrieval",
+      "Bash(xargs ls *)"
     ]
   }
 }
