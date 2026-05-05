@@ -4,7 +4,8 @@
       "Bash(npx vue-tsc *)",
       "Bash(npm install *)",
       "mcp__augment-context-engine__codebase-retrieval",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(npm run *)"
     ]
   }
 }

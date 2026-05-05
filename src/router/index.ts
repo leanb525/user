@@ -291,15 +291,23 @@ const router = createRouter({
     ],
 })
 
+// 这两个路由的 component loader 依赖 appStore.config.template_mode 决定加载哪个 view
+const TEMPLATE_MODE_ROUTES = new Set(['products', 'category-products'])
+
 // Navigation Guard
 router.beforeEach(async (to, _from, next) => {
     const userAuthStore = useUserAuthStore()
     const appStore = useAppStore()
     void captureAffiliateFromRoute(to)
 
-    // Ensure config is loaded before checking template mode
     if (!appStore.config) {
-        await appStore.loadConfig()
+        if (typeof to.name === 'string' && TEMPLATE_MODE_ROUTES.has(to.name)) {
+            // 仅这两个路由必须等 config 才能决定渲染哪个 view
+            await appStore.loadConfig()
+        } else {
+            // 其它路由不阻塞首屏，让 config 后台加载
+            void appStore.loadConfig()
+        }
     }
 
     if (to.meta.requiresUserAuth) {
