@@ -30,11 +30,19 @@
         {{ t('products.stockStatus.outOfStock') }}
       </div>
 
-      <!-- GPT Inventory Badge -->
-      <div v-if="gptInventoryAvailable !== null"
-        class="absolute left-2 top-2 md:left-3 md:top-3 z-20 px-2 py-1 rounded-md text-xs md:text-sm font-bold shadow-md"
-        :class="gptInventoryAvailable ? 'bg-amber-400 text-gray-900' : 'bg-gray-400 text-gray-900'">
-        {{ gptInventoryAvailable ? '有凭证' : '无凭证' }}
+      <!-- Channel Inventory Badges -->
+      <div v-if="channel1Available !== null || channel2Available !== null"
+        class="absolute left-2 top-2 md:left-3 md:top-3 z-20 flex flex-col gap-1">
+        <div v-if="channel1Available !== null"
+          class="px-2 py-1 rounded-md text-xs md:text-sm font-bold shadow-md"
+          :class="channel1Available ? 'bg-amber-400 text-gray-900' : 'bg-gray-400 text-gray-900'">
+          {{ channel1Available ? '渠道1: 有' : '渠道1: 无' }}
+        </div>
+        <div v-if="channel2Available !== null"
+          class="px-2 py-1 rounded-md text-xs md:text-sm font-bold shadow-md"
+          :class="channel2Available ? 'bg-emerald-400 text-gray-900' : 'bg-gray-400 text-gray-900'">
+          {{ channel2Available ? '渠道2: 有' : '渠道2: 无' }}
+        </div>
       </div>
 
       <!-- Tags -->
@@ -179,12 +187,14 @@ withDefaults(defineProps<{
   index?: number
   maxTags?: number
   animationStep?: number
-  gptInventoryAvailable?: boolean | null
+  channel1Available?: boolean | null
+  channel2Available?: boolean | null
 }>(), {
   index: 0,
   maxTags: 2,
   animationStep: 50,
-  gptInventoryAvailable: null,
+  channel1Available: null,
+  channel2Available: null,
 })
 
 defineEmits<{

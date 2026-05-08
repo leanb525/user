@@ -146,7 +146,8 @@
                       :product="product"
                       :index="idx"
                       :animation-step="20"
-                      :gpt-inventory-available="product.id === 23 ? gptInventoryAvailable : null"
+                      :channel1-available="product.id === 23 ? channel1Available : null"
+                      :channel2-available="product.id === 23 ? channel2Available : null"
                       @click="goToProduct"
                       @quick-buy="openQuickBuy"
                     />
@@ -303,7 +304,8 @@
             :product="product"
             :index="idx"
             :animation-step="60"
-            :gpt-inventory-available="product.id === 23 ? gptInventoryAvailable : null"
+            :channel1-available="product.id === 23 ? channel1Available : null"
+            :channel2-available="product.id === 23 ? channel2Available : null"
             @click="goToProduct"
             @quick-buy="openQuickBuy"
           />
@@ -396,15 +398,30 @@ const products = ref<any[]>([])
 const posts = ref<any[]>([])
 const quickBuyProduct = ref<any>(null)
 const quickBuyVisible = ref(false)
-const gptInventoryAvailable = ref<boolean | null>(null)
+const channel1Available = ref<boolean | null>(null)
+const channel2Available = ref<boolean | null>(null)
 
-const loadGptInventory = async () => {
+const loadChannel1Inventory = async () => {
   try {
-    const res = await fetch('https://shop.freeymxz.com/cdk-api/api/cards/gpt-inventory')
+    const res = await fetch('https://plus.viaai.one/api/cards/gpt-inventory')
     if (!res.ok) return
     const json = await res.json()
     const empty = json?.data?.empty
-    if (typeof empty === 'boolean') gptInventoryAvailable.value = !empty
+    if (typeof empty === 'boolean') channel1Available.value = !empty
+  } catch {
+    // silent
+  }
+}
+
+const loadChannel2Inventory = async () => {
+  try {
+    const res = await fetch('https://plus.viaai.one/api/stock-info')
+    if (!res.ok) return
+    const json = await res.json()
+    const items = json?.items
+    if (Array.isArray(items) && items.length > 0) {
+      channel2Available.value = items.some((it: any) => it?.level && it.level !== 'none')
+    }
   } catch {
     // silent
   }
@@ -500,9 +517,9 @@ const loadLatestPosts = async () => {
 // ==================== Lifecycle ====================
 onMounted(async () => {
   if (templateMode.value === 'list') {
-    await Promise.all([loadBanners(), listInitialize(), loadGptInventory()])
+    await Promise.all([loadBanners(), listInitialize(), loadChannel1Inventory(), loadChannel2Inventory()])
   } else {
-    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadGptInventory()])
+    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadChannel1Inventory(), loadChannel2Inventory()])
   }
 })
 
