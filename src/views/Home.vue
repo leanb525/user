@@ -418,9 +418,9 @@ const loadChannel2Inventory = async () => {
     const res = await fetch('https://plus.viaai.one/api/stock-info')
     if (!res.ok) return
     const json = await res.json()
-    const items = json?.items
-    if (Array.isArray(items) && items.length > 0) {
-      channel2Available.value = items.some((it: any) => it?.level && it.level !== 'none')
+    const stockLevel = json?.stock_level
+    if (typeof stockLevel === 'string') {
+      channel2Available.value = stockLevel !== 'none'
     }
   } catch {
     // silent
@@ -515,17 +515,29 @@ const loadLatestPosts = async () => {
 }
 
 // ==================== Lifecycle ====================
+let inventoryTimer: ReturnType<typeof setInterval> | null = null
+
+const refreshInventory = () => {
+  loadChannel1Inventory()
+  loadChannel2Inventory()
+}
+
 onMounted(async () => {
   if (templateMode.value === 'list') {
     await Promise.all([loadBanners(), listInitialize(), loadChannel1Inventory(), loadChannel2Inventory()])
   } else {
     await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadChannel1Inventory(), loadChannel2Inventory()])
   }
+  inventoryTimer = setInterval(refreshInventory, 60_000)
 })
 
 onUnmounted(() => {
   stopHeroAutoPlay()
   listCleanup()
+  if (inventoryTimer) {
+    clearInterval(inventoryTimer)
+    inventoryTimer = null
+  }
 })
 </script>
 
