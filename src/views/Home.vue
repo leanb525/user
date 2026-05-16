@@ -292,6 +292,25 @@
           </router-link>
         </div>
 
+        <div v-if="navItems.length > 0" class="mb-6 grid grid-cols-2 gap-3 md:gap-4">
+          <a
+            v-for="(item, idx) in navItems"
+            :key="`nav-${idx}`"
+            :href="item.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="theme-panel theme-card-interactive flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 md:px-4 md:py-3 transition-all"
+          >
+            <div class="flex min-w-0 flex-col">
+              <span class="truncate text-sm md:text-base font-semibold theme-text-primary">{{ item.name }}</span>
+              <span class="truncate text-xs theme-text-muted">{{ item.url }}</span>
+            </div>
+            <svg class="h-4 w-4 flex-shrink-0 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 3h7v7m0-7L10 14m-4-4v11h11" />
+            </svg>
+          </a>
+        </div>
+
         <div v-if="products.length > 0" class="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4">
           <ProductCard
             v-for="(product, idx) in products"
@@ -391,6 +410,7 @@ const latestSectionVisible = computed(() => blogEnabled.value || noticeEnabled.v
 // ==================== Shared State ====================
 const products = ref<any[]>([])
 const posts = ref<any[]>([])
+const navItems = ref<{ name: string; url: string }[]>([])
 const quickBuyProduct = ref<any>(null)
 const quickBuyVisible = ref(false)
 const channel1Available = ref<boolean | null>(null)
@@ -496,6 +516,46 @@ const loadFeaturedProducts = async () => {
   }
 }
 
+const parseNavContent = (html: string): { name: string; url: string }[] => {
+  if (!html) return []
+  const normalized = html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+  const text = normalized.replace(/<[^>]+>/g, '')
+  const decoded = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+  const lineRe = /^(.+?)[：:]\s*(https?:\/\/\S+)\s*$/
+  const results: { name: string; url: string }[] = []
+  for (const raw of decoded.split('\n')) {
+    const line = raw.trim()
+    if (!line) continue
+    const m = line.match(lineRe)
+    if (m && m[1] && m[2]) results.push({ name: m[1].trim(), url: m[2].trim() })
+  }
+  return results
+}
+
+const loadSiteNavigation = async () => {
+  try {
+    const response = await postAPI.list({ type: 'blog', page: 1, page_size: 1 })
+    const latest = response.data.data?.[0]
+    if (!latest || latest.is_published !== true) {
+      navItems.value = []
+      return
+    }
+    const content = latest.content ? getLocalizedText(latest.content) : ''
+    navItems.value = parseNavContent(content)
+  } catch (error) {
+    console.error('Failed to load site navigation:', error)
+    navItems.value = []
+  }
+}
+
 const loadLatestPosts = async () => {
   if (!latestSectionVisible.value) return
   try {
@@ -521,7 +581,7 @@ onMounted(async () => {
   if (templateMode.value === 'list') {
     await Promise.all([loadBanners(), listInitialize(), loadChannel1Inventory(), loadChannel2Inventory()])
   } else {
-    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadChannel1Inventory(), loadChannel2Inventory()])
+    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadSiteNavigation(), loadChannel1Inventory(), loadChannel2Inventory()])
   }
   inventoryTimer = setInterval(refreshInventory, 60_000)
 })
