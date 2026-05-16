@@ -281,15 +281,10 @@
       </div>
     </section>
 
-    <section id="featured" class="relative z-10 pb-14" :class="showHeroSection ? 'pt-14' : 'pt-32 md:pt-36'">
+    <section id="featured" class="relative z-10 pb-14" :class="showHeroSection ? 'pt-6' : 'pt-24 md:pt-28'">
       <div class="container mx-auto px-4">
-        <div class="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <h2 class="theme-section-heading text-3xl md:text-4xl">{{ t('home.featured.title') }}</h2>
-            <p class="mt-2 text-sm theme-text-secondary">{{ t('home.featured.description') }}</p>
-          </div>
+        <div v-if="!hasHeroLink" class="mb-4 flex justify-end">
           <router-link
-                v-if="!hasHeroLink"
                 to="/products"
             class="text-sm font-semibold theme-link-muted"
           >
