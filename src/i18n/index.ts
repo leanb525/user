@@ -141,7 +141,7 @@ const messages = {
             searchBoxPlaceholder: '搜索商品名称或关键词...',
             viewDetails: '查看详情',
             quickBuy: '购买',
-            soldCount: '已售 {count}',
+            soldCount: '已售: {count}',
         },
         blog: {
             subtitle: '最新文章和动态',
@@ -1122,7 +1122,7 @@ const messages = {
             searchBoxPlaceholder: '搜尋商品名稱或關鍵詞...',
             viewDetails: '查看詳情',
             quickBuy: '購買',
-            soldCount: '已售 {count}',
+            soldCount: '已售: {count}',
         },
         productDetail: {
             description: '商品描述',
@@ -2103,7 +2103,7 @@ const messages = {
             searchBoxPlaceholder: 'Search products by name or keyword...',
             viewDetails: 'View Details',
             quickBuy: 'Buy',
-            soldCount: '{count} sold',
+            soldCount: 'Sold: {count}',
         },
         productDetail: {
             description: 'Description',
