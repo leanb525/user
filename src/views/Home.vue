@@ -146,8 +146,7 @@
                       :product="product"
                       :index="idx"
                       :animation-step="20"
-                      :channel1-available="product.id === 23 ? channel1Available : null"
-                      :channel2-available="product.id === 23 ? channel2Available : null"
+                      :credential-available="product.id === 23 ? credentialAvailable : null"
                       @click="goToProduct"
                       @quick-buy="openQuickBuy"
                     />
@@ -318,8 +317,7 @@
             :product="product"
             :index="idx"
             :animation-step="60"
-            :channel1-available="product.id === 23 ? channel1Available : null"
-            :channel2-available="product.id === 23 ? channel2Available : null"
+            :credential-available="product.id === 23 ? credentialAvailable : null"
             @click="goToProduct"
             @quick-buy="openQuickBuy"
           />
@@ -415,6 +413,12 @@ const quickBuyProduct = ref<any>(null)
 const quickBuyVisible = ref(false)
 const channel1Available = ref<boolean | null>(null)
 const channel2Available = ref<boolean | null>(null)
+const credentialAvailable = computed<boolean | null>(() => {
+  const a = channel1Available.value
+  const b = channel2Available.value
+  if (a === null && b === null) return null
+  return a === true || b === true
+})
 
 const loadChannel1Inventory = async () => {
   try {
