@@ -28,6 +28,14 @@
             <span class="relative z-10">{{ item.label }}</span>
           </a>
         </template>
+        <button type="button" @click="showRechargeModal = true"
+          class="theme-nav-link text-sm relative group overflow-hidden flex items-center gap-1.5 whitespace-nowrap shrink-0">
+          <svg class="w-4 h-4 shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+              d="M12 8v13m0-13V6a4 4 0 00-4-4 4 4 0 00-4 4v2h8zm0 0V6a4 4 0 014-4 4 4 0 014 4v2h-8zM5 8h14a1 1 0 011 1v3H4V9a1 1 0 011-1zm0 4h14v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7z" />
+          </svg>
+          <span class="relative z-10">{{ t('nav.cardRecharge') }}</span>
+        </button>
       </div>
 
       <!-- Right Side Actions -->
@@ -177,6 +185,15 @@
             </a>
           </template>
 
+          <button type="button" @click="openRechargeModal"
+            class="w-full text-left px-4 py-3 rounded-xl theme-nav-link text-sm min-h-[44px] flex items-center gap-3">
+            <svg class="w-5 h-5 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                d="M12 8v13m0-13V6a4 4 0 00-4-4 4 4 0 00-4 4v2h8zm0 0V6a4 4 0 014-4 4 4 0 014 4v2h-8zM5 8h14a1 1 0 011 1v3H4V9a1 1 0 011-1zm0 4h14v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7z" />
+            </svg>
+            {{ t('nav.cardRecharge') }}
+          </button>
+
           <!-- Guest orders (not in bottom nav) -->
           <router-link v-if="!userAuthStore.isAuthenticated" to="/guest/orders" @click="showMobileMenu = false"
             class="block w-full text-left px-4 py-3 rounded-xl theme-nav-link text-sm min-h-[44px] flex items-center gap-3"
@@ -214,6 +231,63 @@
         </div>
       </div>
     </Transition>
+
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0">
+      <div v-if="showRechargeModal"
+        class="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+        @click.self="showRechargeModal = false">
+        <Transition
+          appear
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="opacity-0 translate-y-3 scale-95"
+          enter-to-class="opacity-100 translate-y-0 scale-100"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="opacity-100 translate-y-0 scale-100"
+          leave-to-class="opacity-0 translate-y-2 scale-95">
+          <div class="w-full max-w-md theme-panel-strong border theme-border rounded-2xl shadow-2xl overflow-hidden">
+            <div class="px-6 py-5 border-b theme-border flex items-center justify-between gap-4">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                  {{ t('rechargeModal.eyebrow') }}
+                </p>
+                <h3 class="mt-1 text-xl font-bold theme-text-primary">{{ t('rechargeModal.title') }}</h3>
+              </div>
+              <button type="button" @click="showRechargeModal = false"
+                class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg theme-btn-neutral"
+                :aria-label="t('rechargeModal.close')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="p-6 space-y-3">
+              <a v-for="item in rechargeLinks" :key="item.name" :href="item.url" target="_blank" rel="noopener noreferrer"
+                class="group flex items-center justify-between gap-4 rounded-xl border theme-border px-4 py-4 theme-btn-secondary transition-all hover:-translate-y-0.5"
+                @click="showRechargeModal = false">
+                <span class="flex items-center gap-3 min-w-0">
+                  <span class="w-10 h-10 shrink-0 rounded-xl theme-btn-primary flex items-center justify-center font-bold">
+                    {{ item.initial }}
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-semibold theme-text-primary truncate">{{ item.name }}</span>
+                    <span class="block text-xs theme-text-muted truncate">{{ item.description }}</span>
+                  </span>
+                </span>
+                <svg class="w-5 h-5 shrink-0 opacity-60 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 7h4m0 0v4m0-4L7 17" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -234,10 +308,9 @@ const { theme, toggleTheme } = useTheme()
 
 const showMobileMenu = ref(false)
 const showLangMenu = ref(false)
+const showRechargeModal = ref(false)
 const scrolled = ref(false)
 const cartBounce = ref(false)
-
-const isListMode = computed(() => appStore.config?.template_mode === 'list')
 
 // 内置导航项定义
 const builtinNavDefs: Record<string, { path: string; label: string; icon: string }> = {
@@ -321,9 +394,6 @@ const menuItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     { key: 'home', path: '/', label: 'nav.home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1', type: 'route', target: '_self' },
   ]
-  if (!isListMode.value) {
-    items.push({ key: 'products', path: '/products', label: 'nav.products', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', type: 'route', target: '_self' })
-  }
   items.push(...buildBuiltinNavItems())
   items.push(...buildCustomNavItems())
   return items
@@ -347,6 +417,21 @@ const currentLocale = computed(() => {
   return lang.code === 'en-US' ? 'EN' : (lang.code === 'zh-CN' ? '简' : '繁')
 })
 
+const rechargeLinks = computed(() => [
+  {
+    name: t('rechargeModal.gpt'),
+    description: t('rechargeModal.gptDescription'),
+    initial: 'G',
+    url: 'https://plus.viaai.one/',
+  },
+  {
+    name: t('rechargeModal.claude'),
+    description: t('rechargeModal.claudeDescription'),
+    initial: 'C',
+    url: 'https://plus.viaai.one/claude',
+  },
+])
+
 const cartCount = computed(() => cartStore.totalItems)
 
 const brandSiteName = computed(() => {
@@ -357,6 +442,11 @@ const brandSiteName = computed(() => {
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value
   if (showMobileMenu.value) showLangMenu.value = false
+}
+
+const openRechargeModal = () => {
+  showMobileMenu.value = false
+  showRechargeModal.value = true
 }
 
 const toggleLangMenu = () => {

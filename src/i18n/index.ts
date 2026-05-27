@@ -52,9 +52,19 @@ const messages = {
         nav: {
             home: '首页',
             products: '商品中心',
+            cardRecharge: '卡密充值',
             blog: '博客',
             notice: '公告',
             about: '关于',
+        },
+        rechargeModal: {
+            eyebrow: '自助充值',
+            title: '卡密充值',
+            close: '关闭弹窗',
+            gpt: 'GPT 卡密充值',
+            gptDescription: '前往 GPT 充值页面',
+            claude: 'Claude 卡密充值',
+            claudeDescription: '前往 Claude 充值页面',
         },
         footer: {
             description: '专业的在线工作室，为您提供优质的产品和服务。',
@@ -1033,9 +1043,19 @@ const messages = {
         nav: {
             home: '首頁',
             products: '商品中心',
+            cardRecharge: '卡密充值',
             blog: '部落格',
             notice: '公告',
             about: '關於',
+        },
+        rechargeModal: {
+            eyebrow: '自助充值',
+            title: '卡密充值',
+            close: '關閉彈窗',
+            gpt: 'GPT 卡密充值',
+            gptDescription: '前往 GPT 充值頁面',
+            claude: 'Claude 卡密充值',
+            claudeDescription: '前往 Claude 充值頁面',
         },
         footer: {
             description: '專業的線上工作室，為您提供優質的產品和服務。',
@@ -2014,9 +2034,19 @@ const messages = {
         nav: {
             home: 'Home',
             products: 'Products',
+            cardRecharge: 'Card Recharge',
             blog: 'Blog',
             notice: 'Notice',
             about: 'About',
+        },
+        rechargeModal: {
+            eyebrow: 'Self-Service',
+            title: 'Card Recharge',
+            close: 'Close dialog',
+            gpt: 'GPT Recharge',
+            gptDescription: 'Open the GPT recharge page',
+            claude: 'Claude Recharge',
+            claudeDescription: 'Open the Claude recharge page',
         },
         footer: {
             description: 'Professional online studio providing quality products and services.',
