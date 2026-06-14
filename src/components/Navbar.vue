@@ -430,6 +430,12 @@ const rechargeLinks = computed(() => [
     initial: 'C',
     url: 'https://plus.viaai.one/claude',
   },
+  {
+    name: t('rechargeModal.grok'),
+    description: t('rechargeModal.grokDescription'),
+    initial: 'X',
+    url: 'https://plus.viaai.one/grok',
+  },
 ])
 
 const cartCount = computed(() => cartStore.totalItems)

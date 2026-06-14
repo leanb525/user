@@ -411,35 +411,16 @@ const posts = ref<any[]>([])
 const navItems = ref<{ name: string; url: string }[]>([])
 const quickBuyProduct = ref<any>(null)
 const quickBuyVisible = ref(false)
-const channel1Available = ref<boolean | null>(null)
-const channel2Available = ref<boolean | null>(null)
-const credentialAvailable = computed<boolean | null>(() => {
-  const a = channel1Available.value
-  const b = channel2Available.value
-  if (a === null && b === null) return null
-  return a === true || b === true
-})
+const credentialAvailable = ref<boolean | null>(null)
 
-const loadChannel1Inventory = async () => {
+const loadCredentialInventory = async () => {
   try {
-    const res = await fetch('https://plus.viaai.one/api/cards/gpt-inventory')
+    const res = await fetch('https://plus.viaai.one/bt/api/v1/appstore/stock')
     if (!res.ok) return
     const json = await res.json()
-    const empty = json?.data?.empty
-    if (typeof empty === 'boolean') channel1Available.value = !empty
-  } catch {
-    // silent
-  }
-}
-
-const loadChannel2Inventory = async () => {
-  try {
-    const res = await fetch('https://plus.viaai.one/api/stock-info')
-    if (!res.ok) return
-    const json = await res.json()
-    const stockLevel = json?.stock_level
-    if (typeof stockLevel === 'string') {
-      channel2Available.value = stockLevel !== 'none'
+    const available = Number(json?.data?.byPlatform?.chatgpt?.available)
+    if (Number.isFinite(available)) {
+      credentialAvailable.value = available > 0
     }
   } catch {
     // silent
@@ -577,15 +558,14 @@ const loadLatestPosts = async () => {
 let inventoryTimer: ReturnType<typeof setInterval> | null = null
 
 const refreshInventory = () => {
-  loadChannel1Inventory()
-  loadChannel2Inventory()
+  loadCredentialInventory()
 }
 
 onMounted(async () => {
   if (templateMode.value === 'list') {
-    await Promise.all([loadBanners(), listInitialize(), loadChannel1Inventory(), loadChannel2Inventory()])
+    await Promise.all([loadBanners(), listInitialize(), loadCredentialInventory()])
   } else {
-    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadSiteNavigation(), loadChannel1Inventory(), loadChannel2Inventory()])
+    await Promise.all([loadBanners(), loadFeaturedProducts(), loadLatestPosts(), loadSiteNavigation(), loadCredentialInventory()])
   }
   inventoryTimer = setInterval(refreshInventory, 60_000)
 })

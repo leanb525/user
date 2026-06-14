@@ -65,6 +65,8 @@ const messages = {
             gptDescription: '前往 GPT 充值页面',
             claude: 'Claude 卡密充值',
             claudeDescription: '前往 Claude 充值页面',
+            grok: 'Grok 卡密充值',
+            grokDescription: '前往 Grok 充值页面',
         },
         footer: {
             description: '专业的在线工作室，为您提供优质的产品和服务。',
@@ -1056,6 +1058,8 @@ const messages = {
             gptDescription: '前往 GPT 充值頁面',
             claude: 'Claude 卡密充值',
             claudeDescription: '前往 Claude 充值頁面',
+            grok: 'Grok 卡密充值',
+            grokDescription: '前往 Grok 充值頁面',
         },
         footer: {
             description: '專業的線上工作室，為您提供優質的產品和服務。',
@@ -2047,6 +2051,8 @@ const messages = {
             gptDescription: 'Open the GPT recharge page',
             claude: 'Claude Recharge',
             claudeDescription: 'Open the Claude recharge page',
+            grok: 'Grok Recharge',
+            grokDescription: 'Open the Grok recharge page',
         },
         footer: {
             description: 'Professional online studio providing quality products and services.',
